@@ -16,6 +16,7 @@ class CreateIndexRequestHandler : public BaseRequestHandler {
       : BaseRequestHandler(registry) { }
   public:
     void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response);
+  private:
     std::unique_ptr<std::string> ReadRequestBody(HTTPServerRequest &request);
     std::unique_ptr<GeoIndex> CreateIndex(const std::string &input);
 };

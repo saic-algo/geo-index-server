@@ -2,12 +2,13 @@ const _ = require('lodash');
 const geolib = require('geolib');
 const uuid = require('uuid/v4');
 const rp = require('request-promise');
+const Promise = require('bluebird');
 
 const LOCATION_SHANGHAI = {
   latitude: 31.2304,
   longitude: 121.4737,
 };
-const POINT_COUNT = 1000000;
+const POINT_COUNT = 10000;
 const SCALE = 2 * 1000;
 
 function generateLocation(center, scale) {
@@ -26,7 +27,10 @@ const points = _.times(POINT_COUNT, () => generateLocation(LOCATION_SHANGHAI, SC
 
 console.log(`Generated ${points.length} points`);
 
-rp.post('http://localhost:8000/create-index', { json: { points } }).then(result => {
-  console.log(result);
-});
+Promise.resolve(
+  rp.post('http://localhost:8000/GeoIndex/', { json: { points } })
+)
+  .tap(console.log)
+  .then(({ id }) => rp.delete(`http://localhost:8000/GeoIndex/${id}`))
+  .tap(console.log);
 
