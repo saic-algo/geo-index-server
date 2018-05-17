@@ -5,6 +5,7 @@ add_executable(
   geo-index-server-application.cc
   geo-index-request-handler.cc
   geo-index-request-handler-factory.cc
+  request-handlers/create-index.cc
 )
 target_link_libraries(test-server PocoNet PocoUtil PocoFoundation)
 
