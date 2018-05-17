@@ -5,6 +5,8 @@
 #include <Poco/Util/OptionSet.h>
 #include <iostream>
 
+#include "geo-index.h"
+
 using Poco::Util::ServerApplication;
 using Poco::Util::Application;
 using Poco::Util::OptionSet;
@@ -13,7 +15,9 @@ using Poco::Util::OptionSet;
 class GeoIndexServerApplication: public ServerApplication
 {
   public:
-    GeoIndexServerApplication(): _helpRequested(false) { }
+    GeoIndexServerApplication():
+      _helpRequested(false),
+      m_registry(std::make_unique<GeoIndexRegistry>()) { }
     ~GeoIndexServerApplication() { }
 
   protected:
@@ -25,6 +29,7 @@ class GeoIndexServerApplication: public ServerApplication
 
   private:
     bool _helpRequested;
+    std::shared_ptr<GeoIndexRegistry> m_registry;
 };
 
 #endif //__GEO_INDEX_SERVER_APPLICATION__ 

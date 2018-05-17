@@ -8,7 +8,7 @@ HTTPRequestHandler* GeoIndexRequestHandlerFactory::createRequestHandler(const HT
   if (request.getURI() == "/") 
     return new GeoIndexRequestHandler();
   if (request.getURI() == "/create-index" && request.getMethod() == HTTPServerRequest::HTTP_POST)
-    return new CreateIndexRequestHandler();
+    return new CreateIndexRequestHandler(m_registry);
   else
     return 0;
 }

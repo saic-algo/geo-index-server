@@ -7,6 +7,6 @@ add_executable(
   geo-index-request-handler-factory.cc
   request-handlers/create-index.cc
 )
-target_link_libraries(test-server PocoNet PocoUtil PocoFoundation)
+target_link_libraries(test-server PocoNet PocoUtil PocoFoundation PocoJSON s2)
 
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
