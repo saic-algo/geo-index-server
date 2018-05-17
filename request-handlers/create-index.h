@@ -1,25 +1,23 @@
 #ifndef __REQUEST_HANDLER__CREATE_INDEX__
 #define __REQUEST_HANDLER__CREATE_INDEX__
 
-#include <memory>
 #include <Poco/Net/HTTPRequestHandler.h>
 #include <Poco/Net/HTTPServerRequest.h>
 #include <Poco/Net/HTTPServerResponse.h>
-#include "../geo-index.h"
+#include "base.h"
 
 using Poco::Net::HTTPRequestHandler;
 using Poco::Net::HTTPServerRequest;
 using Poco::Net::HTTPServerResponse;
 
-class CreateIndexRequestHandler : public HTTPRequestHandler {
+class CreateIndexRequestHandler : public BaseRequestHandler {
   public:
-    CreateIndexRequestHandler(std::shared_ptr<GeoIndexRegistry> registry) : m_registry(registry) { };
-
+    CreateIndexRequestHandler(std::shared_ptr<GeoIndexRegistry> registry)
+      : BaseRequestHandler(registry) { }
   public:
     void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response);
-
-  private:
-    std::shared_ptr<GeoIndexRegistry> m_registry;
+    std::unique_ptr<std::string> ReadRequestBody(HTTPServerRequest &request);
+    std::unique_ptr<GeoIndex> CreateIndex(const std::string &input);
 };
 
 #endif // __REQUEST_HANDLER__CREATE_INDEX__

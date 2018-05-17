@@ -1,5 +1,6 @@
 #include <iostream>
 #include <memory>
+#include <ctime>
 
 #include <Poco/UUIDGenerator.h>
 #include <Poco/JSON/Parser.h>
@@ -20,7 +21,7 @@ using Poco::JSON::Object;
 using Poco::JSON::Array;
 using Poco::Dynamic::Var;
 
-std::unique_ptr<std::string> ReadRequestBody(HTTPServerRequest &request) {
+std::unique_ptr<std::string> CreateIndexRequestHandler::ReadRequestBody(HTTPServerRequest &request) {
   istream &istm = request.stream();
   size_t length = request.getContentLength();
   auto buffer = make_unique<char[]>(length);
@@ -29,12 +30,14 @@ std::unique_ptr<std::string> ReadRequestBody(HTTPServerRequest &request) {
   return std::make_unique<std::string>(buffer.get(), length);
 }
 
-std::unique_ptr<GeoIndex> CreateIndex(const std::string &input) {
-  std::unique_ptr<GeoIndex> index = std::make_unique<GeoIndex>();
-
-
+std::unique_ptr<GeoIndex> CreateIndexRequestHandler::CreateIndex(const std::string &input) {
+  m_performanceLogger.start("parse-request-body");
   Poco::JSON::Parser parser;
   Object::Ptr object = parser.parse(input).extract<Object::Ptr>();
+  m_performanceLogger.finish("parse-request-body");
+
+  m_performanceLogger.start("build-index");
+  std::unique_ptr<GeoIndex> index = std::make_unique<GeoIndex>();
   Array::Ptr logs = object->get("points").extract<Array::Ptr>();
 
   for (auto &i: *logs) {
@@ -46,6 +49,7 @@ std::unique_ptr<GeoIndex> CreateIndex(const std::string &input) {
 
     index->Add(loc.ToPoint(), id);
   }
+  m_performanceLogger.finish("build-index");
 
   return std::move(index);
 }
@@ -60,28 +64,12 @@ void CreateIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSe
   response.setChunkedTransferEncoding(true);
   response.setContentType("text");
   ostream &ostm = response.send();
-  ostm << uuid.toString() << endl;
 
-  /*
-
-    Parser parser;
-    Var result = parser.parse(*body);
-    Object::Ptr object = result.extract<Object::Ptr>();
-
-    std::cout << (int)object->get("Hello") << std::endl;
-
-    Array::Ptr array = object->get("Array").extract<Array::Ptr>();
-
-    for (auto &i: *array) {
-      std::cout << (int)i << std::endl;
-    }
-
-
-    std::cout << uuid.toString() << std::endl;
-
-
-    ostream &ostr = response.send();
-    ostr << *body << endl;
-  */
+  Poco::JSON::Object result;
+  result.set("id", uuid.toString());
+  for (auto &pair: m_performanceLogger) {
+    result.set(pair.first, pair.second);
+  }
+  result.stringify(ostm);
 }
 
