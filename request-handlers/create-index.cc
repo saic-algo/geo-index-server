@@ -59,17 +59,14 @@ void CreateIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSe
   std::unique_ptr<std::string> body = ReadRequestBody(request);
   std::unique_ptr<GeoIndex> index = CreateIndex(*body);
 
+  Log("URI", request.getURI());
+
   m_registry->insert(std::make_pair(uuid.toString(), std::move(index)));
 
-  response.setChunkedTransferEncoding(true);
-  response.setContentType("text");
-  ostream &ostm = response.send();
 
   Poco::JSON::Object result;
   result.set("id", uuid.toString());
-  for (auto &pair: m_performanceLogger) {
-    result.set(pair.first, pair.second);
-  }
-  result.stringify(ostm);
+
+  SendResponse(response, result);
 }
 

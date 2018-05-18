@@ -33,13 +33,13 @@ Promise.resolve(
   .tap(console.log)
   .then(({ id }) => rp.get({
     uri: `http://localhost:8000/GeoIndex/${id}`,
-    qs: _.assign({
+    qs: _.omit(_.assign({
       radius: SCALE * 1.414,
       count: 100,
     }, _.zipObject(
       ['id', 'latitude', 'longitude'],
       generateLocation(LOCATION_SHANGHAI, SCALE))
-    ),
+    ), 'id'),
     json: true,
   }))
   .tap(console.log)

@@ -13,7 +13,7 @@ using Poco::Net::HTTPServerResponse;
 class DeleteIndexRequestHandler : public BaseRequestHandler {
   public:
     DeleteIndexRequestHandler(std::shared_ptr<GeoIndexRegistry> registry)
-      : BaseRequestHandler(registry) { }
+      : BaseRequestHandler("DeleteIndex", registry) { }
   public:
     void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response);
 };
