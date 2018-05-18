@@ -5,6 +5,7 @@
 #include "geo-index-request-handler.h"
 #include "request-handlers/create-index.h"
 #include "request-handlers/delete-index.h"
+#include "request-handlers/query-index.h"
 
 const std::regex GEO_INDEX_REGEX("^\\/GeoIndex(\\/.*)?$");
 
@@ -13,6 +14,9 @@ HTTPRequestHandler* GeoIndexRequestHandlerFactory::createRequestHandler(const HT
     return new GeoIndexRequestHandler();
 
   if (std::regex_match(request.getURI(), GEO_INDEX_REGEX)) {
+    if (request.getMethod() == HTTPServerRequest::HTTP_GET)
+      return new QueryIndexRequestHandler(m_registry);
+
     if (request.getMethod() == HTTPServerRequest::HTTP_POST)
       return new CreateIndexRequestHandler(m_registry);
 

@@ -11,6 +11,11 @@ void DeleteIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSe
   const std::string &uri = request.getURI();
   std::smatch matchUUID;
 
+#ifdef DEBUG 
+  std::cout << "Delete Index" << std::endl;
+  std::cout << "URI: " << uri << std::endl;
+#endif // DEBUG
+
   if (std::regex_search(uri, matchUUID, UUID_REGEX)) {
     std::ostream &ostm = response.send();
     Poco::JSON::Object result;
