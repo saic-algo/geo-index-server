@@ -35,11 +35,13 @@ class PerformanceLogger {
 
 class BaseRequestHandler : public Poco::Net::HTTPRequestHandler {
   public:
-    BaseRequestHandler(std::shared_ptr<GeoIndexRegistry> registry)
-      : m_registry(registry) { };
+    BaseRequestHandler(std::shared_ptr<GeoIndexRegistry> registry, std::shared_ptr<Client> client)
+      : m_registry(registry),
+        m_redisClient(client) { };
 
   protected:
     std::shared_ptr<GeoIndexRegistry> m_registry;
+    std::shared_ptr<Client> m_redisClient;
     PerformanceLogger m_performanceLogger;
 };
 

@@ -13,11 +13,15 @@ using Poco::Net::HTTPServerRequest;
 
 class GeoIndexRequestHandlerFactory : public HTTPRequestHandlerFactory {
   public:
-    GeoIndexRequestHandlerFactory(std::shared_ptr<GeoIndexRegistry> registry) : m_registry(registry) { }
+    GeoIndexRequestHandlerFactory(std::shared_ptr<GeoIndexRegistry> registry, std::shared_ptr<Client> client)
+     : m_registry(registry),
+       m_redisClient(client) { }
+       
   public:
     HTTPRequestHandler* createRequestHandler(const HTTPServerRequest& request);
   private:
     std::shared_ptr<GeoIndexRegistry> m_registry;
+    std::shared_ptr<Client> m_redisClient;
 };
 
 
