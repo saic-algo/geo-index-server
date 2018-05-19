@@ -6,7 +6,10 @@
 #include <unordered_map>
 #include <iostream>
 #include <Poco/Net/HTTPRequestHandler.h>
+#include <Poco/Redis/Client.h>
 #include "../geo-index.h"
+
+using Poco::Redis::Client;
 
 class PerformanceLogger {
   public:
