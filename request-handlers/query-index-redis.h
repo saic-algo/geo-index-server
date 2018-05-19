@@ -1,5 +1,5 @@
-#ifndef __REQUEST_HANDLER__QUERY_INDEX__
-#define __REQUEST_HANDLER__QUERY_INDEX__
+#ifndef __REQUEST_HANDLER__QUERY_INDEX_REDIS__
+#define __REQUEST_HANDLER__QUERY_INDEX_REDIS__
 
 #include <Poco/Net/HTTPServerRequest.h>
 #include <Poco/Net/HTTPServerResponse.h>
@@ -9,13 +9,13 @@ using Poco::Net::HTTPRequestHandler;
 using Poco::Net::HTTPServerRequest;
 using Poco::Net::HTTPServerResponse;
 
-class QueryIndexRequestHandler : public BaseRequestHandler {
+class RedisQueryIndexRequestHandler : public BaseRequestHandler {
   public:
-    QueryIndexRequestHandler(std::shared_ptr<GeoIndexRegistry> registry)
+    RedisQueryIndexRequestHandler(std::shared_ptr<GeoIndexRegistry> registry)
       : BaseRequestHandler(registry) { }
   public:
     void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response);
 };
 
-#endif // __REQUEST_HANDLER__QUERY_INDEX__
+#endif // __REQUEST_HANDLER__QUERY_INDEX_REDIS__
 

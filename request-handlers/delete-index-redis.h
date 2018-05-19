@@ -1,5 +1,5 @@
-#ifndef __REQUEST_HANDLER__DELETE_INDEX__
-#define __REQUEST_HANDLER__DELETE_INDEX__
+#ifndef __REQUEST_HANDLER__DELETE_INDEX_REDIS__
+#define __REQUEST_HANDLER__DELETE_INDEX_REDIS__
 
 #include <Poco/Net/HTTPRequestHandler.h>
 #include <Poco/Net/HTTPServerRequest.h>
@@ -18,5 +18,5 @@ class RedisDeleteIndexRequestHandler : public BaseRequestHandler {
     void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response);
 };
 
-#endif // __REQUEST_HANDLER__DELETE_INDEX__
+#endif // __REQUEST_HANDLER__DELETE_INDEX_REDIS__
 

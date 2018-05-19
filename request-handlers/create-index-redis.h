@@ -1,5 +1,5 @@
-#ifndef __REQUEST_HANDLER__CREATE_INDEX__
-#define __REQUEST_HANDLER__CREATE_INDEX__
+#ifndef __REQUEST_HANDLER__CREATE_INDEX_REDIS__
+#define __REQUEST_HANDLER__CREATE_INDEX_REDIS__
 
 #include <Poco/Net/HTTPRequestHandler.h>
 #include <Poco/Net/HTTPServerRequest.h>
@@ -21,5 +21,5 @@ class RedisCreateIndexRequestHandler : public BaseRequestHandler {
     std::unique_ptr<GeoIndex> CreateIndex(const std::string &input);
 };
 
-#endif // __REQUEST_HANDLER__CREATE_INDEX__
+#endif // __REQUEST_HANDLER__CREATE_INDEX_REDIS__
 
