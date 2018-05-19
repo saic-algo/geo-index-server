@@ -8,6 +8,7 @@
 using Poco::Net::HTTPRequestHandler;
 using Poco::Net::HTTPServerRequest;
 using Poco::Net::HTTPServerResponse;
+using Poco::Redis::Client;
 
 class RedisQueryIndexRequestHandler : public BaseRequestHandler {
   public:

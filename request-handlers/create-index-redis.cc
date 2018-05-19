@@ -46,7 +46,8 @@ std::unique_ptr<GeoIndex> RedisCreateIndexRequestHandler::CreateIndex(const std:
     const double lat = (double)log->get(1);
     const double lng = (double)log->get(2);
     S2LatLng loc = S2LatLng::FromDegrees(lat, lng);
-
+    
+    
     index->Add(loc.ToPoint(), id);
   }
   m_performanceLogger.finish("build-index");

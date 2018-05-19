@@ -10,6 +10,7 @@
 using Poco::Net::HTTPRequestHandler;
 using Poco::Net::HTTPRequestHandlerFactory;
 using Poco::Net::HTTPServerRequest;
+using Poco::Redis::Client;
 
 class GeoIndexRequestHandlerFactory : public HTTPRequestHandlerFactory {
   public:
