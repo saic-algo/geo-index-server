@@ -19,24 +19,24 @@ HTTPRequestHandler* GeoIndexRequestHandlerFactory::createRequestHandler(const HT
 
   if (std::regex_match(request.getURI(), GEO_INDEX_REGEX)) {
     if (request.getMethod() == HTTPServerRequest::HTTP_GET)
-      return new QueryIndexRequestHandler(m_registry);
+      return new QueryIndexRequestHandler(m_registry, m_redisClient);
 
     if (request.getMethod() == HTTPServerRequest::HTTP_POST)
-      return new CreateIndexRequestHandler(m_registry);
+      return new CreateIndexRequestHandler(m_registry, m_redisClient);
 
     if (request.getMethod() == HTTPServerRequest::HTTP_DELETE) {
-      return new DeleteIndexRequestHandler(m_registry);
+      return new DeleteIndexRequestHandler(m_registry, m_redisClient);
     }
   }
   else if (std::regex_match(request.getURI(), GEO_INDEX_REDIS_REGEX)) {
     if (request.getMethod() == HTTPServerRequest::HTTP_GET)
-      return new RedisQueryIndexRequestHandler(m_registry);
+      return new RedisQueryIndexRequestHandler(m_registry, m_redisClient);
 
     if (request.getMethod() == HTTPServerRequest::HTTP_POST)
-      return new RedisCreateIndexRequestHandler(m_registry);
+      return new RedisCreateIndexRequestHandler(m_registry, m_redisClient);
 
     if (request.getMethod() == HTTPServerRequest::HTTP_DELETE) {
-      return new RedisDeleteIndexRequestHandler(m_registry);
+      return new RedisDeleteIndexRequestHandler(m_registry, m_redisClient);
     }
   }
 

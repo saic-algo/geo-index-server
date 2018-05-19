@@ -46,3 +46,21 @@ Promise.resolve(
   .then(({ id }) => rp.delete(`http://localhost:8000/GeoIndexRedis/${id}`))
   .tap(console.log);
 
+Promise.resolve(
+  rp.post('http://localhost:8000/GeoIndex/', { json: { points } })
+)
+  .tap(console.log)
+  .then(({ id }) => rp.get({
+    uri: `http://localhost:8000/GeoIndex/${id}`,
+    qs: _.assign({
+      radius: SCALE * 1.414,
+      count: 100,
+    }, _.zipObject(
+      ['id', 'latitude', 'longitude'],
+      generateLocation(LOCATION_SHANGHAI, SCALE))
+    ),
+    json: true,
+  }))
+  .tap(console.log)
+  .then(({ id }) => rp.delete(`http://localhost:8000/GeoIndex/${id}`))
+  .tap(console.log);
