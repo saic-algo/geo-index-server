@@ -5,7 +5,6 @@
 #include <Poco/UUIDGenerator.h>
 #include <Poco/JSON/Parser.h>
 
-
 #include <s2/s2latlng.h>
 
 #include "create-index-redis.h"
@@ -45,10 +44,16 @@ std::unique_ptr<GeoIndex> RedisCreateIndexRequestHandler::CreateIndex(const std:
     const std::string &id = log->get(0).toString();
     const double lat = (double)log->get(1);
     const double lng = (double)log->get(2);
+
     S2LatLng loc = S2LatLng::FromDegrees(lat, lng);
-    
-    
+
+
     index->Add(loc.ToPoint(), id);
+
+    Poco::Redis::Array cmd;
+    cmd << "set" << "foo" << "bar";
+    m_redisClient.execute(cmd);
+
   }
   m_performanceLogger.finish("build-index");
 
