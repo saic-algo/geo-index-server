@@ -1,5 +1,5 @@
-#ifndef __REQUEST_HANDLER__CREATE_INDEX__
-#define __REQUEST_HANDLER__CREATE_INDEX__
+#ifndef __REQUEST_HANDLER__CREATE_INDEX_REDIS__
+#define __REQUEST_HANDLER__CREATE_INDEX_REDIS__
 
 #include <Poco/Net/HTTPRequestHandler.h>
 #include <Poco/Net/HTTPServerRequest.h>
@@ -10,16 +10,16 @@ using Poco::Net::HTTPRequestHandler;
 using Poco::Net::HTTPServerRequest;
 using Poco::Net::HTTPServerResponse;
 
-class CreateIndexRequestHandler : public BaseRequestHandler {
+class RedisCreateIndexRequestHandler : public BaseRequestHandler {
   public:
-    CreateIndexRequestHandler(std::shared_ptr<GeoIndexRegistry> registry, std::shared_ptr<Client> client)
+    RedisCreateIndexRequestHandler(std::shared_ptr<GeoIndexRegistry> registry, std::shared_ptr<Client> client)
       : BaseRequestHandler(registry, client) { }
   public:
     void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response);
   private:
     std::unique_ptr<std::string> ReadRequestBody(HTTPServerRequest &request);
-    std::unique_ptr<GeoIndex> CreateIndex(const std::string &input);
+    int CreateIndex(const std::string &input, const std::string &indexId);
 };
 
-#endif // __REQUEST_HANDLER__CREATE_INDEX__
+#endif // __REQUEST_HANDLER__CREATE_INDEX_REDIS__
 
