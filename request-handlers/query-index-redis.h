@@ -15,6 +15,7 @@ class RedisQueryIndexRequestHandler : public BaseRequestHandler {
       : BaseRequestHandler(registry, client) { }
   public:
     void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response);
+    std::vector<std::string> knnQuery(const std::string &indexId, const std::string &lng, const std::string &lat, int n, const double& maxRadius);
 };
 
 #endif // __REQUEST_HANDLER__QUERY_INDEX_REDIS__

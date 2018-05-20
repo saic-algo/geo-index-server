@@ -48,7 +48,7 @@ int RedisCreateIndexRequestHandler::CreateIndex(const std::string &input, const 
 
     Poco::Redis::Array cmd;
     cmd << "geoadd" << indexId << lng << lat << id;
-    var res = m_redisClient->execute<Poco::Int64>(cmd);
+    auto res = m_redisClient->execute<Poco::Int64>(cmd);
     ret += res;
   }
   m_performanceLogger.finish("build-index");

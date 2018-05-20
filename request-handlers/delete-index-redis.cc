@@ -2,6 +2,7 @@
 #include <regex>
 
 #include <Poco/JSON/Object.h>
+#include <Poco/Redis/Command.h>
 
 #include "delete-index-redis.h"
 
