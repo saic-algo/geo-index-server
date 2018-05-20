@@ -89,6 +89,7 @@ void RedisQueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HT
 
 std::vector<std::string> RedisQueryIndexRequestHandler::knnQuery(const std::string &indexId, const std::string &lng, const std::string &lat, int n, const double &maxRadius)
 {
+  std::cout << "In function knnQuery(" << indexId << ", " << lng << ", " << "lat" << ", " << n << ", " << maxRadius << ")" << endl;
   double currectRadius = 0.1;
   Poco::Redis::Array result;
   while(result.size() < n && currectRadius < maxRadius){
