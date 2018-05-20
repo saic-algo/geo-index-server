@@ -27,7 +27,6 @@ void RedisDeleteIndexRequestHandler::handleRequest(HTTPServerRequest &request, H
 
     Command cmd = Command::del(matchUUID.str());
     auto ret = m_redisClient->execute<Poco::Int64>(cmd);
-    std::cout << "Delete " << ret << " index.";
 
     result.stringify(ostm);
   }

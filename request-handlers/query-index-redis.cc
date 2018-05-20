@@ -31,9 +31,6 @@ void RedisQueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HT
   std::ostream &ostm = response.send();
 
   if (std::regex_search(path, matchUUID, UUID_REGEX)) {
-// #ifdef DEBUG
-    std::cout << "Query Index: " << matchUUID.str() << std::endl;
-// #endif // DEBUG
 
     // Process the query parameters
     const Poco::URI::QueryParameters query = uri.getQueryParameters();
@@ -56,20 +53,17 @@ void RedisQueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HT
     const int count = std::stoi(pCount -> second);
     const double radius = pRadius == params.end() ? DEFAULT_RADIUS : std::stod(pRadius->second) / 1000;
 
-// #ifdef DEBUG
+#ifdef DEBUG
     std::cout << "Latitude: " << latitude << std::endl;
     std::cout << "Longitude: " << longitude << std::endl;
     std::cout << "Count: " << count << std::endl;
     std::cout << "Radius: " << radius << std::endl;
-// #endif // DEBUG
+#endif // DEBUG
 
     // Build the query
     auto queryResult = knnQuery(matchUUID.str(), std::to_string(longitude), std::to_string(latitude), count , radius);
     
     const int size = queryResult.size();
-// #ifdef DEBUG
-    std::cout << "Result Size: " << size << std::endl;
-// #endif // DEBUG
 
     response.setContentType("text/json");
 
@@ -93,18 +87,15 @@ std::vector<std::string> RedisQueryIndexRequestHandler::knnQuery(const std::stri
   std::cout << "In function knnQuery(" << indexId << ", " << lng << ", " << lat << ", " << n << ", " << maxRadius << ")" << std::endl;
   double currectRadius = 0.1;
   Poco::Redis::Array result;
-  do{
-    std::cout << "georadius" << " " << indexId << " " << lng << " " << lat << " " << std::to_string(currectRadius) << "km" << "ASC" << std::endl;
+  do {
     Poco::Redis::Array cmd;
     cmd << "georadius" << indexId << lng << lat << std::to_string(currectRadius) << "km" << "ASC";
     result = m_redisClient->execute<Poco::Redis::Array>(cmd);
     currectRadius = currectRadius * 2;
-  }while(result.size() < n && currectRadius < maxRadius);
+  } while(result.size() < n && currectRadius < maxRadius);
 
-  std::cout << "In function knnQuery " << "result set size:" << result.size() << std::endl;
   std::vector<string> ret(n);
   for(int i=0; i<n && i<(int)result.size(); ++i){
-    std::cout << "type is " << result.getType(i) << std::endl;
     ret[i] = result.get<Poco::Redis::BulkString>(i).value();
   }
 
