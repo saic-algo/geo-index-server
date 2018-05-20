@@ -6,6 +6,7 @@
 
 #include <Poco/JSON/Parser.h>
 #include <Poco/URI.h>
+#include <Poco/Redis/Type.h>
 
 #include <s2/s1angle.h>
 #include <s2/s2latlng.h>
@@ -89,21 +90,22 @@ void RedisQueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HT
 
 std::vector<std::string> RedisQueryIndexRequestHandler::knnQuery(const std::string &indexId, const std::string &lng, const std::string &lat, int n, const double &maxRadius)
 {
-  std::cout << "In function knnQuery(" << indexId << ", " << lng << ", " << "lat" << ", " << n << ", " << maxRadius << ")" << endl;
+  std::cout << "In function knnQuery(" << indexId << ", " << lng << ", " << lat << ", " << n << ", " << maxRadius << ")" << std::endl;
   double currectRadius = 0.1;
   Poco::Redis::Array result;
-  while(result.size() < n && currectRadius < maxRadius){
+  do{
     std::cout << "georadius" << " " << indexId << " " << lng << " " << lat << " " << std::to_string(currectRadius) << "km" << "ASC" << std::endl;
     Poco::Redis::Array cmd;
     cmd << "georadius" << indexId << lng << lat << std::to_string(currectRadius) << "km" << "ASC";
     result = m_redisClient->execute<Poco::Redis::Array>(cmd);
     currectRadius = currectRadius * 2;
-  }
+  }while(result.size() < n && currectRadius < maxRadius);
 
   std::cout << "In function knnQuery " << "result set size:" << result.size() << std::endl;
   std::vector<string> ret(n);
   for(int i=0; i<n && i<(int)result.size(); ++i){
-    ret.push_back(result.get<std::string>(i));
+    std::cout << "type is " << result.getType(i) << std::endl;
+    ret[i] = result.get<Poco::Redis::BulkString>(i).value();
   }
 
   return ret;

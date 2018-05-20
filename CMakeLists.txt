@@ -15,4 +15,4 @@ add_executable(
 target_link_libraries(test-server PocoNet PocoUtil PocoFoundation PocoJSON PocoRedis s2)
 
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set (CMAKE_CXX_FLAGS_DEBUG "-DEBUG")
+set (CMAKE_CXX_FLAGS_DEBUG "-DDEBUG")
