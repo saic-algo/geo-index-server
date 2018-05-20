@@ -5,6 +5,8 @@
 
 #include "delete-index-redis.h"
 
+using Poco::Redis::Command;
+
 const std::regex UUID_REGEX("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}");
 
 void RedisDeleteIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) {
@@ -22,7 +24,10 @@ void RedisDeleteIndexRequestHandler::handleRequest(HTTPServerRequest &request, H
 
     result.set("id", matchUUID.str());
 
-    m_registry->erase(matchUUID.str());
+    Command cmd = Command::del(matchUUID.str());
+    auto ret = m_redisClient->execute<Poco::Int64>(cmd);
+    std::cout << "Delete " << ret << " index.";
+
     result.stringify(ostm);
   }
 }

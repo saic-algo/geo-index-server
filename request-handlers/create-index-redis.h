@@ -18,7 +18,7 @@ class RedisCreateIndexRequestHandler : public BaseRequestHandler {
     void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response);
   private:
     std::unique_ptr<std::string> ReadRequestBody(HTTPServerRequest &request);
-    std::unique_ptr<GeoIndex> CreateIndex(const std::string &input);
+    void CreateIndex(const std::string &input, std::string &indexId);
 };
 
 #endif // __REQUEST_HANDLER__CREATE_INDEX_REDIS__

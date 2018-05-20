@@ -70,15 +70,8 @@ void RedisQueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HT
 #endif // DEBUG
 
     // Build the query
-    const S2LatLng loc = S2LatLng::FromDegrees(latitude, longitude);
-    S2ClosestPointQuery<std::string>::PointTarget target(loc.ToPoint());
-    S2ClosestPointQuery<std::string> closestPointQuery(pIndex->second.get());
-
-    closestPointQuery.mutable_options()->set_max_points(count);
-    closestPointQuery.mutable_options()->set_max_distance(S1Angle::Radians(S2Earth::KmToRadians(radius)));
-
-    auto queryResult = closestPointQuery.FindClosestPoints(&target);
-
+    auto queryResult = knnQuery(pIndex->first, std::to_string(longitude), std::to_string(latitude), count , radius * 1000);
+    
     const int size = queryResult.size();
 #ifdef DEBUG
     std::cout << "Result Size: " << size << std::endl;
@@ -101,3 +94,18 @@ void RedisQueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HT
   }
 }
 
+std::vector<std::string> RedisQueryIndexRequestHandler::knnQuery(const std::string &indexId, const std::string &lng, const std::string &lat, int n, const double &maxRadius)
+{
+  double currectRadius = 200;
+  Poco::Redis::Array result;
+  while(result.size() < n && currectRadius < maxRadius){
+    Poco::Redis::Array cmd;
+    cmd << "georadius" << indexId << lng << lat << std::to_string(currectRadius) << "km" << "ASC";
+    result = m_redisClient->execute<Poco::Redis::Array>(cmd);
+  }
+
+  std::vector<string> ret(n);
+  for(int i=0; i<n && i<(int)result.size(); ++i){
+    ret.push_back(result.get<std::string>(i));
+  }
+}
