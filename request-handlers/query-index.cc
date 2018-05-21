@@ -82,6 +82,18 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
     Poco::JSON::Object result;
     result.set("id", matchUUID.str());
     result.set("count", queryResult.size());
+
+    Poco::JSON::Array points;
+    for (const S2ClosestPointQuery<std::string>::Result &result: queryResult) {
+      Poco::JSON::Object point;
+      S2LatLng loc(result.point());
+
+      point.set("id", result.data());
+      point.set("latitude", loc.lat().degrees());
+      point.set("longitude", loc.lng().degrees());
+      points.add(point);
+    }
+    result.set("points",  points);
     SendResponse(response, result);
   }
 }
