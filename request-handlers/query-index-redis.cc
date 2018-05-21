@@ -76,6 +76,15 @@ void RedisQueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HT
       result.set(pair.first, pair.second);
     }
 
+    Poco::JSON::Array points;
+    for(const GeoPoint& p : queryResult) {
+      Poco::JSON::Object point;
+      point.set("id", p.first);
+      point.set("latitude", p.second.second);
+      point.set("longitude", p.second.first);
+    }
+    result.set("points", points);
+
 #ifdef DEBUG
     result.stringify(std::cout);
 #endif // DEBUG
@@ -102,11 +111,11 @@ std::vector<GeoPoint> RedisQueryIndexRequestHandler::knnQuery(const std::string 
   std::vector<GeoPoint> ret(n);
   GeoPoint point;
   for(int i=0; i<n && i<(int)result.size(); ++i){
-    auto& item = result.get<Poco::Redis::Array>(i);
-    auto& carId = item.get<Poco::Redis::BulkString>(0).value();
-    auto& coord = item.get<Poco::Redis::Array>(1);
-    auto& lng = coord.get<Poco::Redis::BulkString>(0).value();
-    auto& lat = coord.get<Poco::Redis::BulkString>(1).value();
+    auto item = result.get<Poco::Redis::Array>(i);
+    auto carId = item.get<Poco::Redis::BulkString>(0).value();
+    auto coord = item.get<Poco::Redis::Array>(1);
+    auto lng = coord.get<Poco::Redis::BulkString>(0).value();
+    auto lat = coord.get<Poco::Redis::BulkString>(1).value();
     point.first = carId;
     point.second = std::make_pair(std::stod(lng), std::stod(lat));
     ret[i] = point;
