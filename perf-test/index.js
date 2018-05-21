@@ -10,7 +10,7 @@ const LOCATION_SHANGHAI = {
 };
 const POINT_COUNT = 100000;
 const SCALE = 2 * 1000;
-const ADDRESS = 'http://localhost:8080/GeoIndexRedis/';
+const ADDRESS = 'http://localhost:8000/GeoIndexRedis/';
 
 function generateLocation(center, scale) {
   const id = uuid();

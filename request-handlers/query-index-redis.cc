@@ -82,6 +82,7 @@ void RedisQueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HT
       point.set("id", p.first);
       point.set("latitude", p.second.second);
       point.set("longitude", p.second.first);
+      points.add(point);
     }
     result.set("points", points);
 
