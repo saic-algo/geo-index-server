@@ -10,6 +10,7 @@ const LOCATION_SHANGHAI = {
 };
 const POINT_COUNT = 100000;
 const SCALE = 2 * 1000;
+const ADDRESS = 'http://localhost:8000/GeoIndexRedis/';
 
 function generateLocation(center, scale) {
   const id = uuid();
@@ -23,26 +24,40 @@ function generateLocation(center, scale) {
   return [id, latitude, longitude];
 }
 
+function queryClosestPoints({ id, target, count, radius }) {
+  const uri = `${ADDRESS}${id}`;
+
+  return Promise.resolve(rp.get({
+    uri,
+    qs: {
+      radius,
+      count,
+      latitude: target.latitude,
+      longitude: target.longitude,
+    },
+    json: true,
+  })).tap(({ points }) => {
+    points.forEach(({ id, latitude, longitude }) => {
+      console.log(`id: ${id}, distance: ${geolib.getDistance(target, { latitude, longitude })}`);
+    });
+  });
+}
+
 const points = _.times(POINT_COUNT, () => generateLocation(LOCATION_SHANGHAI, SCALE));
 
 console.log(`Generated ${points.length} points`);
 
 Promise.resolve(
-  rp.post('http://localhost:8000/GeoIndexRedis/', { json: { points } })
+  rp.post(ADDRESS, { json: { points } })
 )
   .tap(console.log)
-  .then(({ id }) => rp.get({
-    uri: `http://localhost:8000/GeoIndexRedis/${id}`,
-    qs: _.assign({
-      radius: SCALE * 1.414,
-      count: 100,
-    }, _.zipObject(
-      ['id', 'latitude', 'longitude'],
-      generateLocation(LOCATION_SHANGHAI, SCALE))
-    ),
-    json: true,
+  .then(({ id }) => queryClosestPoints({
+    id,
+    target: _.zipObject(['id', 'latitude', 'longitude'], generateLocation(LOCATION_SHANGHAI, SCALE)),
+    count: 100,
+    radius: SCALE * 0.707,
   }))
-  .tap(console.log)
-  .then(({ id }) => rp.delete(`http://localhost:8000/GeoIndexRedis/${id}`))
+  .then(({ points, id }) => {
+    return rp.delete(`${ADDRESS}${id}`);
+  })
   .tap(console.log);
-
