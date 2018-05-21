@@ -12,7 +12,7 @@ using Poco::Net::HTTPServerResponse;
 class QueryIndexRequestHandler : public BaseRequestHandler {
   public:
     QueryIndexRequestHandler(std::shared_ptr<GeoIndexRegistry> registry, std::shared_ptr<Client> client)
-      : BaseRequestHandler(registry, client) { }
+      : BaseRequestHandler("QueryIndex", registry, client) { }
   public:
     void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response);
 };

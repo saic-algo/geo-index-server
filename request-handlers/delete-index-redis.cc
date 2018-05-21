@@ -14,21 +14,17 @@ void RedisDeleteIndexRequestHandler::handleRequest(HTTPServerRequest &request, H
   const std::string &uri = request.getURI();
   std::smatch matchUUID;
 
-#ifdef DEBUG 
-  std::cout << "Delete Index" << std::endl;
-  std::cout << "URI: " << uri << std::endl;
-#endif // DEBUG
+  Log("URI", uri);
 
   if (std::regex_search(uri, matchUUID, UUID_REGEX)) {
-    std::ostream &ostm = response.send();
-    Poco::JSON::Object result;
-
-    result.set("id", matchUUID.str());
 
     Command cmd = Command::del(matchUUID.str());
     auto ret = m_redisClient->execute<Poco::Int64>(cmd);
 
-    result.stringify(ostm);
+    Poco::JSON::Object result;
+    result.set("id", matchUUID.str());
+
+    SendResponse(response, result);
   }
 }
 

@@ -62,17 +62,11 @@ void RedisCreateIndexRequestHandler::handleRequest(HTTPServerRequest &request, H
   auto indexId = uuid.toString();  
   int nPoints = CreateIndex(*body, indexId);  
 
-  std::cout << "Create Index " << indexId << " with " << nPoints << " points." << std::endl;
-
-  response.setChunkedTransferEncoding(true);
-  response.setContentType("text");
-  ostream &ostm = response.send();
-
+  Log("URI", request.getURI());
+  Log("Create Index Total Points", nPoints);
   Poco::JSON::Object result;
   result.set("id", indexId);
-  for (auto &pair: m_performanceLogger) {
-    result.set(pair.first, pair.second);
-  }
-  result.stringify(ostm);
+
+  SendResponse(response, result);
 }
 

@@ -21,25 +21,19 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   const Poco::URI uri(request.getURI());
   const std::string &path = uri.getPath();
 
-#ifdef DEBUG
-  std::cout << "Query index" << std::endl;
-  std::cout << "URI: " << request.getURI() << std::endl;
-#endif // DEBUG
+  Log("URI", request.getURI());
 
   std::smatch matchUUID;
-  std::ostream &ostm = response.send();
 
   if (std::regex_search(path, matchUUID, UUID_REGEX)) {
     // Find the index
     const auto pIndex = m_registry->find(matchUUID.str());
     if (pIndex == m_registry->end()) {
-      response.setStatus(HTTPServerResponse::HTTP_BAD_REQUEST);
-      ostm << HTTPServerResponse::HTTP_REASON_BAD_REQUEST;
+      BadRequest(response);
       return;
     }
-#ifdef DEBUG
-    std::cout << "Index ID: " << pIndex->first << std::endl;
-#endif // DEBUG
+
+    Log("IndexID", pIndex->first);
 
     // Process the query parameters
     const Poco::URI::QueryParameters query = uri.getQueryParameters();
@@ -52,7 +46,6 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
     if (pLatitude == params.end() || pLongitude == params.end() || pCount == params.end()) {
       response.setStatus(HTTPServerResponse::HTTP_BAD_REQUEST);
-      ostm << HTTPServerResponse::HTTP_REASON_BAD_REQUEST;
       return;
     }
 
@@ -62,14 +55,13 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
     const int count = std::stoi(pCount -> second);
     const double radius = pRadius == params.end() ? DEFAULT_RADIUS : std::stod(pRadius->second) / 1000;
 
-#ifdef DEBUG
-    std::cout << "Latitude: " << latitude << std::endl;
-    std::cout << "Longitude: " << longitude << std::endl;
-    std::cout << "Count: " << count << std::endl;
-    std::cout << "Radius: " << radius << std::endl;
-#endif // DEBUG
+    Log("Latitude", latitude);
+    Log("Longitude", longitude);
+    Log("Count", count);
+    Log("Radius", radius);
 
-    // Build the query
+    // Make the query
+    m_performanceLogger.start("query");
     const S2LatLng loc = S2LatLng::FromDegrees(latitude, longitude);
     S2ClosestPointQuery<std::string>::PointTarget target(loc.ToPoint());
     S2ClosestPointQuery<std::string> closestPointQuery(pIndex->second.get());
@@ -78,11 +70,11 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
     closestPointQuery.mutable_options()->set_max_distance(S1Angle::Radians(S2Earth::KmToRadians(radius)));
 
     auto queryResult = closestPointQuery.FindClosestPoints(&target);
+    m_performanceLogger.finish("query");
 
     const int size = queryResult.size();
-#ifdef DEBUG
-    std::cout << "Result Size: " << size << std::endl;
-#endif // DEBUG
+
+    Log("ResultSize", size);
 
     response.setContentType("text/json");
 
@@ -90,14 +82,19 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
     Poco::JSON::Object result;
     result.set("id", matchUUID.str());
     result.set("count", queryResult.size());
-    for (auto &pair: m_performanceLogger) {
-      result.set(pair.first, pair.second);
-    }
 
-#ifdef DEBUG
-    result.stringify(std::cout);
-#endif // DEBUG
-    result.stringify(ostm);
+    Poco::JSON::Array points;
+    for (const S2ClosestPointQuery<std::string>::Result &result: queryResult) {
+      Poco::JSON::Object point;
+      S2LatLng loc(result.point());
+
+      point.set("id", result.data());
+      point.set("latitude", loc.lat().degrees());
+      point.set("longitude", loc.lng().degrees());
+      points.add(point);
+    }
+    result.set("points",  points);
+    SendResponse(response, result);
   }
 }
 

@@ -3,49 +3,36 @@
 
 #include <memory>
 #include <ctime>
-#include <unordered_map>
-#include <iostream>
 #include <Poco/Net/HTTPRequestHandler.h>
+#include <Poco/Net/HTTPServerResponse.h>
+#include <Poco/JSON/Object.h>
 #include <Poco/Redis/Client.h>
 #include "../geo-index.h"
+#include "performance-logger.h"
 
 using Poco::Redis::Client;
 
-class PerformanceLogger {
-  public:
-    typedef std::unordered_map<std::string, clock_t> TimestampMap;
-    typedef std::unordered_map<std::string, float> DurationMap;
-  public:
-    void start(const std::string &action) {
-      m_startTimes.insert(std::make_pair(action, clock()));
-    }
-
-    void finish(const std::string &action) {
-      clock_t startTime = m_startTimes[action];
-      float duration = ((float)(clock() - startTime)) / CLOCKS_PER_SEC;
-
-      m_durations.insert(std::make_pair(action, duration));
-    }
-
-    DurationMap::iterator begin() { return m_durations.begin(); }
-    DurationMap::iterator end() { return m_durations.end(); }
-    DurationMap::const_iterator cbegin() { return m_durations.cbegin(); }
-    DurationMap::const_iterator cend() { return m_durations.cend(); }
-  private:
-    TimestampMap m_startTimes;
-    DurationMap m_durations;
-};
 
 class BaseRequestHandler : public Poco::Net::HTTPRequestHandler {
   public:
-    BaseRequestHandler(std::shared_ptr<GeoIndexRegistry> registry, std::shared_ptr<Client> client)
-      : m_registry(registry),
-        m_redisClient(client) { };
+    BaseRequestHandler(const char *pName, std::shared_ptr<GeoIndexRegistry> registry, std::shared_ptr<Client> client);
 
   protected:
+    void SendResponse(Poco::Net::HTTPServerResponse &response, const Poco::JSON::Object &data);
+    void BadRequest(Poco::Net::HTTPServerResponse &response);
+    template <typename T> void Log(const std::string &key, const T &value);
+
+    std::string m_name;
     std::shared_ptr<GeoIndexRegistry> m_registry;
     std::shared_ptr<Client> m_redisClient;
     PerformanceLogger m_performanceLogger;
 };
+template <typename T>
+void BaseRequestHandler::Log(const std::string &key, const T &value) {
+#ifdef DEBUG
+  std::cout << "[" << m_name << "/" << key << "]: ";
+  std::cout << value << std::endl;
+#endif // DEBUG
+}
 
 #endif // __REQUEST_HANDLER__BASE__
