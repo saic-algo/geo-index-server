@@ -8,5 +8,6 @@
 
 typedef S2PointIndex<std::string> GeoIndex;
 typedef std::unordered_map<std::string, std::unique_ptr<GeoIndex> > GeoIndexRegistry;
+typedef std::pair<std::string, std::pair<double, double>> GeoPoint;
 
 #endif // __GEO_INDEX__
