@@ -8,22 +8,23 @@
 #include <Poco/Net/HTTPServerResponse.h>
 #include <Poco/JSON/Object.h>
 
-#include "../geo-index.h"
+#include "../geo-index-registry.h"
 #include "performance-logger.h"
 
 class BaseRequestHandler : public Poco::Net::HTTPRequestHandler {
   public:
-    BaseRequestHandler(const char *pName, std::shared_ptr<GeoIndexRegistry> registry);
+    BaseRequestHandler(const char *pName, GeoIndexRegistry &registry);
     ~BaseRequestHandler();
 
   protected:
-    void SendResponse(Poco::Net::HTTPServerResponse &response, const Poco::JSON::Object &data);
+    void SendResponse(Poco::Net::HTTPServerResponse &response, const Poco::JSON::Object::Ptr data);
     void BadRequest(Poco::Net::HTTPServerResponse &response);
+    const Poco::JSON::Object::Ptr ReadRequestBody(Poco::Net::HTTPServerRequest &request);
     template <typename T> void Log(const std::string &key, const T &value);
 
   protected:
     std::string m_name;
-    std::shared_ptr<GeoIndexRegistry> m_registry;
+    GeoIndexRegistry &m_registry;
     PerformanceLogger m_performanceLogger;
 };
 

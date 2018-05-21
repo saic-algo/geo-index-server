@@ -5,7 +5,7 @@
 #include <Poco/Net/HTTPRequestHandlerFactory.h>
 #include <Poco/Net/HTTPServerRequest.h>
 
-#include "geo-index.h"
+#include "geo-index-registry.h"
 
 using Poco::Net::HTTPRequestHandler;
 using Poco::Net::HTTPRequestHandlerFactory;
@@ -13,11 +13,13 @@ using Poco::Net::HTTPServerRequest;
 
 class GeoIndexRequestHandlerFactory : public HTTPRequestHandlerFactory {
   public:
-    GeoIndexRequestHandlerFactory(std::shared_ptr<GeoIndexRegistry> registry) : m_registry(registry) { }
+    GeoIndexRequestHandlerFactory(GeoIndexRegistry &registry, const GeoIndexFactory &factory)
+      : m_registry(registry), m_factory(factory) { }
   public:
     HTTPRequestHandler* createRequestHandler(const HTTPServerRequest& request);
   private:
-    std::shared_ptr<GeoIndexRegistry> m_registry;
+    GeoIndexRegistry &m_registry;
+    const GeoIndexFactory &m_factory;
 };
 
 

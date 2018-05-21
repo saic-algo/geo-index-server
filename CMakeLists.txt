@@ -5,6 +5,7 @@ add_executable(
   geo-index-server-application.cc
   geo-index-request-handler.cc
   geo-index-request-handler-factory.cc
+  s2-geo-index.cc
   request-handlers/base.cc
   request-handlers/performance-logger.cc
   request-handlers/create-index.cc

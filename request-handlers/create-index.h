@@ -4,21 +4,19 @@
 #include <Poco/Net/HTTPRequestHandler.h>
 #include <Poco/Net/HTTPServerRequest.h>
 #include <Poco/Net/HTTPServerResponse.h>
-#include "base.h"
 
-using Poco::Net::HTTPRequestHandler;
-using Poco::Net::HTTPServerRequest;
-using Poco::Net::HTTPServerResponse;
+#include "base.h"
 
 class CreateIndexRequestHandler : public BaseRequestHandler {
   public:
-    CreateIndexRequestHandler(std::shared_ptr<GeoIndexRegistry> registry)
-      : BaseRequestHandler("CreateIndex", registry) { }
+    CreateIndexRequestHandler(GeoIndexRegistry &registry, const GeoIndexFactory &factory)
+      : BaseRequestHandler("CreateIndex", registry), m_factory(factory) { }
+
   public:
-    void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response);
+    void handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response);
+
   private:
-    std::unique_ptr<std::string> ReadRequestBody(HTTPServerRequest &request);
-    std::unique_ptr<GeoIndex> CreateIndex(const std::string &input);
+    const GeoIndexFactory &m_factory;
 };
 
 #endif // __REQUEST_HANDLER__CREATE_INDEX__

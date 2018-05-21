@@ -1,16 +1,16 @@
+const Promise = require('bluebird');
 const _ = require('lodash');
 const geolib = require('geolib');
 const uuid = require('uuid/v4');
 const rp = require('request-promise');
-const Promise = require('bluebird');
 
 const LOCATION_SHANGHAI = {
   latitude: 31.2304,
   longitude: 121.4737,
 };
-const POINT_COUNT = 100000;
+const POINT_COUNT = 1000;
 const SCALE = 2 * 1000;
-const ADDRESS = 'http://localhost:8080/GeoIndex/';
+const ADDRESS = 'http://localhost:8000/GeoIndex/';
 
 function generateLocation(center, scale) {
   const id = uuid();
@@ -27,33 +27,46 @@ function generateLocation(center, scale) {
 function queryClosestPoints({ id, target, count, radius }) {
   const uri = `${ADDRESS}${id}`;
 
-  return Promise.resolve(rp.get({
-    uri,
-    qs: {
+  return Promise.resolve(rp.post(uri, {
+    json: {
       radius,
       count,
-      latitude: target.latitude,
-      longitude: target.longitude,
-    },
-    json: true,
-  })).tap(({ points }) => {
-    points.forEach(({ id, latitude, longitude }) => {
-      console.log(`id: ${id}, distance: ${geolib.getDistance(target, { latitude, longitude })}`);
-    });
-  });
+      points: [
+        target,
+      ]
+    }
+  })).tap(console.log);
 }
 
-const points = _.times(POINT_COUNT, () => generateLocation(LOCATION_SHANGHAI, SCALE));
+function createIndex({ center, scale, count }) {
+  const points = _.times(count, () => generateLocation(LOCATION_SHANGHAI, scale));
 
-console.log(`Generated ${points.length} points`);
+  return Promise.resolve(rp.post(ADDRESS, { json: { points } })).tap(console.log);
+}
 
-Promise.resolve(
-  rp.post(ADDRESS, { json: { points } })
-)
+/*
+function performanceTest({
+  center,
+  totalCount,
+  scale,
+  queryCounts,
+}) {
+  createIndex({ center, scale, count: totalCount })
+    .then(({
+      id,
+      '@performance-logs': {
+        'build-index': duration,
+      },
+    }) => {
+      _.forEach(queryCounts)
+    });
+}
+*/
+createIndex({ center: LOCATION_SHANGHAI, scale: SCALE, count: POINT_COUNT })
   .tap(console.log)
   .then(({ id }) => queryClosestPoints({
     id,
-    target: _.zipObject(['id', 'latitude', 'longitude'], generateLocation(LOCATION_SHANGHAI, SCALE)),
+    target: generateLocation(LOCATION_SHANGHAI, SCALE),
     count: 100,
     radius: SCALE * 0.707,
   }))

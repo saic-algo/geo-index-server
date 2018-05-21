@@ -1,72 +1,38 @@
-#include <iostream>
 #include <memory>
-#include <ctime>
-
-#include <Poco/UUIDGenerator.h>
-#include <Poco/JSON/Parser.h>
-
-
-#include <s2/s2latlng.h>
 
 #include "create-index.h"
 
-using std::istream;
-using std::ostream;
-using std::endl;
-using std::make_unique;
+using std::string;
+using std::unique_ptr;
+using std::move;
 
-using Poco::UUIDGenerator;
-using Poco::JSON::Parser;
 using Poco::JSON::Object;
 using Poco::JSON::Array;
-using Poco::Dynamic::Var;
+using Poco::Net::HTTPServerRequest;
+using Poco::Net::HTTPServerResponse;
 
-std::unique_ptr<std::string> CreateIndexRequestHandler::ReadRequestBody(HTTPServerRequest &request) {
-  istream &istm = request.stream();
-  size_t length = request.getContentLength();
-  auto buffer = make_unique<char[]>(length);
-  istm.read(buffer.get(), length);
+void CreateIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) {
+  Log("URI", request.getURI());
 
-  return std::make_unique<std::string>(buffer.get(), length);
-}
-
-std::unique_ptr<GeoIndex> CreateIndexRequestHandler::CreateIndex(const std::string &input) {
-  m_performanceLogger.start("parse-request-body");
-  Poco::JSON::Parser parser;
-  Object::Ptr object = parser.parse(input).extract<Object::Ptr>();
-  m_performanceLogger.finish("parse-request-body");
+  const Object::Ptr object = ReadRequestBody(request);
 
   m_performanceLogger.start("build-index");
-  std::unique_ptr<GeoIndex> index = std::make_unique<GeoIndex>();
-  Array::Ptr logs = object->get("points").extract<Array::Ptr>();
+  unique_ptr<GeoIndex> index = m_factory.CreateGeoIndex();
+  Array::Ptr points = object->get("points").extract<Array::Ptr>();
 
-  for (auto &i: *logs) {
-    Array::Ptr log = i.extract<Array::Ptr>();
-    const std::string &id = log->get(0).toString();
-    const double lat = (double)log->get(1);
-    const double lng = (double)log->get(2);
-    S2LatLng loc = S2LatLng::FromDegrees(lat, lng);
+  for (auto &i: *points) {
+    Array::Ptr point = i.extract<Array::Ptr>();
+    const string &id = point->get(0).toString();
+    const double lat = (double)point->get(1);
+    const double lng = (double)point->get(2);
 
-    index->Add(loc.ToPoint(), id);
+    index->AddPoint(GeoPoint(id, lat, lng));
   }
   m_performanceLogger.finish("build-index");
 
-  return std::move(index);
-}
-
-void CreateIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) {
-  Poco::UUID uuid = UUIDGenerator::defaultGenerator().create();
-  std::unique_ptr<std::string> body = ReadRequestBody(request);
-  std::unique_ptr<GeoIndex> index = CreateIndex(*body);
-
-  Log("URI", request.getURI());
-
-  m_registry->insert(std::make_pair(uuid.toString(), std::move(index)));
-
-
-  Poco::JSON::Object result;
-  result.set("id", uuid.toString());
-
+  Object::Ptr result(new Object);
+  string uuid = m_registry.AddGeoIndex(move(index));
+  result->set("id", uuid);
   SendResponse(response, result);
 }
 
