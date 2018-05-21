@@ -9,14 +9,11 @@
 
 class CreateIndexRequestHandler : public BaseRequestHandler {
   public:
-    CreateIndexRequestHandler(GeoIndexRegistry &registry, const GeoIndexFactory &factory)
-      : BaseRequestHandler("CreateIndex", registry), m_factory(factory) { }
+    CreateIndexRequestHandler(GeoIndexRegistry &registry)
+      : BaseRequestHandler("CreateIndex", registry) { }
 
   public:
     void handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response);
-
-  private:
-    const GeoIndexFactory &m_factory;
 };
 
 #endif // __REQUEST_HANDLER__CREATE_INDEX__

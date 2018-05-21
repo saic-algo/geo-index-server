@@ -21,7 +21,7 @@ HTTPRequestHandler* GeoIndexRequestHandlerFactory::createRequestHandler(const HT
   const std::string &method = request.getMethod();
 
   if (std::regex_match(uri, REGEX_CREATE_GEO_INDEX) && method == HTTPServerRequest::HTTP_POST) {
-    return new CreateIndexRequestHandler(m_registry, m_factory);
+    return new CreateIndexRequestHandler(m_registry);
   }
 
   std::smatch match;

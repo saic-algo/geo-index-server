@@ -10,12 +10,8 @@
 
 class GeoIndexRegistry {
   public:
-    const std::string AddGeoIndex(std::unique_ptr<GeoIndex> index) {
-      Poco::UUID uuid = Poco::UUIDGenerator::defaultGenerator().create();
-
-      m_map.insert(std::make_pair(uuid.toString(), move(index)));
-
-      return uuid.toString();
+    void AddGeoIndex(std::unique_ptr<GeoIndex> index) {
+      m_map.insert(std::make_pair(index->UUID(), move(index)));
     }
 
     const GeoIndex *GetGeoIndex(const std::string &uuid) const {

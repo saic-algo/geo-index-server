@@ -1,9 +1,12 @@
 #include <memory>
 
 #include "create-index.h"
+#include "../s2-geo-index.h"
+#include "../redis-geo-index.h"
 
 using std::string;
 using std::unique_ptr;
+using std::make_unique;
 using std::move;
 
 using Poco::JSON::Object;
@@ -11,14 +14,29 @@ using Poco::JSON::Array;
 using Poco::Net::HTTPServerRequest;
 using Poco::Net::HTTPServerResponse;
 
+const char *REDIS_HOST = "localhost";
+const unsigned short REDIS_PORT = 6379;
+
 void CreateIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) {
   Log("URI", request.getURI());
 
   const Object::Ptr object = ReadRequestBody(request);
 
   m_performanceLogger.start("build-index");
-  unique_ptr<GeoIndex> index = m_factory.CreateGeoIndex();
   Array::Ptr points = object->get("points").extract<Array::Ptr>();
+  string type = object->get("type");
+
+  Log("Type", type);
+
+  unique_ptr<GeoIndex> index;
+  
+  if (type == "redis") {
+    // Redis
+    index = make_unique<RedisGeoIndex>(REDIS_HOST, REDIS_PORT);
+  } else {
+    // S2
+    index = make_unique<S2GeoIndex>();
+  }
 
   for (auto &i: *points) {
     Array::Ptr point = i.extract<Array::Ptr>();
@@ -31,8 +49,9 @@ void CreateIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSe
   m_performanceLogger.finish("build-index");
 
   Object::Ptr result(new Object);
-  string uuid = m_registry.AddGeoIndex(move(index));
-  result->set("id", uuid);
+  result->set("id", index->UUID());
+
+  m_registry.AddGeoIndex(move(index));
   SendResponse(response, result);
 }
 

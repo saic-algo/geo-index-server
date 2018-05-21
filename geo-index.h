@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include <Poco/UUIDGenerator.h>
 #include <Poco/JSON/Array.h>
 
 struct GeoPoint {
@@ -33,21 +34,17 @@ typedef std::unique_ptr<VGeoPoint> VGeoPointPtr;
 
 class GeoIndex {
   public:
+    GeoIndex()
+      : m_uuid(Poco::UUIDGenerator::defaultGenerator().createRandom().toString()) { }
+
+  public:
     virtual void AddPoint(const GeoPoint &point) = 0;
     virtual VGeoPointPtr QueryClosestPoints(const GeoPoint &target, int maxCount, double maxRadius) const = 0;
-};
 
-class GeoIndexFactory {
-  public:
-    virtual std::unique_ptr<GeoIndex> CreateGeoIndex() const = 0;
-};
+    const std::string &UUID() { return m_uuid; }
 
-template <typename TIndex>
-class GeoIndexFactoryImpl : public GeoIndexFactory {
-  public:
-    virtual std::unique_ptr<GeoIndex> CreateGeoIndex() const {
-      return std::make_unique<TIndex>();
-    }
+  protected:
+    const std::string m_uuid;
 };
 
 #endif // __GEO_INDEX__

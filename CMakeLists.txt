@@ -6,13 +6,14 @@ add_executable(
   geo-index-request-handler.cc
   geo-index-request-handler-factory.cc
   s2-geo-index.cc
+  redis-geo-index.cc
   request-handlers/base.cc
   request-handlers/performance-logger.cc
   request-handlers/create-index.cc
   request-handlers/delete-index.cc
   request-handlers/query-index.cc
 )
-target_link_libraries(test-server PocoNet PocoUtil PocoFoundation PocoJSON s2)
+target_link_libraries(test-server PocoNet PocoUtil PocoFoundation PocoJSON PocoRedis s2)
 
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (CMAKE_CXX_FLAGS_DEBUG "-DDEBUG")

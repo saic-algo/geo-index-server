@@ -18,8 +18,7 @@ class GeoIndexServerApplication: public ServerApplication
   public:
     GeoIndexServerApplication():
       _helpRequested(false),
-      m_registry(),
-      m_factory() { }
+      m_registry() { }
     ~GeoIndexServerApplication() { }
 
   protected:
@@ -32,7 +31,6 @@ class GeoIndexServerApplication: public ServerApplication
   private:
     bool _helpRequested;
     GeoIndexRegistry m_registry;
-    S2GeoIndexFactory m_factory;
 };
 
 #endif //__GEO_INDEX_SERVER_APPLICATION__ 
