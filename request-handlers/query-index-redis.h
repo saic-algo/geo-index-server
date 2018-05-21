@@ -12,7 +12,7 @@ using Poco::Net::HTTPServerResponse;
 class RedisQueryIndexRequestHandler : public BaseRequestHandler {
   public:
     RedisQueryIndexRequestHandler(std::shared_ptr<GeoIndexRegistry> registry, std::shared_ptr<Client> client)
-      : BaseRequestHandler(registry, client) { }
+      : BaseRequestHandler("QueryIndexRedis", registry, client) { }
   public:
     void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response);
     std::vector<GeoPoint> knnQuery(const std::string &indexId, const std::string &lng, const std::string &lat, int n, const double& maxRadius);

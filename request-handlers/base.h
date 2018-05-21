@@ -16,6 +16,7 @@ using Poco::Redis::Client;
 class BaseRequestHandler : public Poco::Net::HTTPRequestHandler {
   public:
     BaseRequestHandler(const char *pName, std::shared_ptr<GeoIndexRegistry> registry, std::shared_ptr<Client> client);
+    ~BaseRequestHandler();
 
   protected:
     void SendResponse(Poco::Net::HTTPServerResponse &response, const Poco::JSON::Object &data);

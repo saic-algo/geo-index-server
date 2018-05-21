@@ -12,8 +12,8 @@ using std::ostream;
 using Poco::Net::HTTPServerResponse;
 using Poco::JSON::Object;
 
-BaseRequestHandler::BaseRequestHandler(const char *pName, std::shared_ptr<GeoIndexRegistry> registry)
-  : m_name(pName), m_registry(registry)
+BaseRequestHandler::BaseRequestHandler(const char *pName, std::shared_ptr<GeoIndexRegistry> registry, std::shared_ptr<Client> client)
+  : m_name(pName), m_registry(registry), m_redisClient(client)
 {
 #ifdef DEBUG
   std::cout << "==== " << m_name << " Begin ===" << std::endl;
