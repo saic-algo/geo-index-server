@@ -3,17 +3,19 @@
 
 #include <memory>
 #include <ctime>
-
 #include <Poco/Net/HTTPRequestHandler.h>
 #include <Poco/Net/HTTPServerResponse.h>
 #include <Poco/JSON/Object.h>
-
+#include <Poco/Redis/Client.h>
 #include "../geo-index.h"
 #include "performance-logger.h"
 
+using Poco::Redis::Client;
+
+
 class BaseRequestHandler : public Poco::Net::HTTPRequestHandler {
   public:
-    BaseRequestHandler(const char *pName, std::shared_ptr<GeoIndexRegistry> registry);
+    BaseRequestHandler(const char *pName, std::shared_ptr<GeoIndexRegistry> registry, std::shared_ptr<Client> client);
     ~BaseRequestHandler();
 
   protected:
@@ -21,11 +23,18 @@ class BaseRequestHandler : public Poco::Net::HTTPRequestHandler {
     void BadRequest(Poco::Net::HTTPServerResponse &response);
     template <typename T> void Log(const std::string &key, const T &value);
 
-  protected:
     std::string m_name;
     std::shared_ptr<GeoIndexRegistry> m_registry;
+    std::shared_ptr<Client> m_redisClient;
     PerformanceLogger m_performanceLogger;
 };
+template <typename T>
+void BaseRequestHandler::Log(const std::string &key, const T &value) {
+#ifdef DEBUG
+  std::cout << "[" << m_name << "/" << key << "]: ";
+  std::cout << value << std::endl;
+#endif // DEBUG
+}
 
 template <typename T>
 void BaseRequestHandler::Log(const std::string &key, const T &value) {

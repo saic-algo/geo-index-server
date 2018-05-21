@@ -65,7 +65,7 @@ int GeoIndexServerApplication::main(const std::vector<std::string>& args)
   } else {
     unsigned short port = (unsigned short)config().getInt("port", 8000);
     ServerSocket socket(port);
-    HTTPServer server(new GeoIndexRequestHandlerFactory(m_registry), socket, new HTTPServerParams);
+    HTTPServer server(new GeoIndexRequestHandlerFactory(m_registry, m_redisClient), socket, new HTTPServerParams);
     server.start();
     waitForTerminationRequest();
     server.stop();

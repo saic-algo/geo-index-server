@@ -11,8 +11,8 @@ using Poco::Net::HTTPServerResponse;
 
 class QueryIndexRequestHandler : public BaseRequestHandler {
   public:
-    QueryIndexRequestHandler(std::shared_ptr<GeoIndexRegistry> registry)
-      : BaseRequestHandler("QueryIndex", registry) { }
+    QueryIndexRequestHandler(std::shared_ptr<GeoIndexRegistry> registry, std::shared_ptr<Client> client)
+      : BaseRequestHandler("QueryIndex", registry, client) { }
   public:
     void handleRequest(HTTPServerRequest &request, HTTPServerResponse &response);
 };
