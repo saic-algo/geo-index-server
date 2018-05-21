@@ -10,7 +10,8 @@ const LOCATION_SHANGHAI = {
 };
 const POINT_COUNT = 100000;
 const SCALE = 2 * 1000;
-const ADDRESS = 'http://localhost:8000/GeoIndexRedis/';
+const ADDRESS = 'http://localhost:8000/GeoIndex/';
+const ADDRESS_REDIS = 'http://localhost:8000/GeoIndexRedis/';
 
 function generateLocation(center, scale) {
   const id = uuid();
@@ -25,7 +26,7 @@ function generateLocation(center, scale) {
 }
 
 function queryClosestPoints({ id, target, count, radius }) {
-  const uri = `${ADDRESS}${id}`;
+  const uri = `${ADDRESS_REDIS}${id}`;
 
   return Promise.resolve(rp.get({
     uri,
@@ -48,7 +49,7 @@ const points = _.times(POINT_COUNT, () => generateLocation(LOCATION_SHANGHAI, SC
 console.log(`Generated ${points.length} points`);
 
 Promise.resolve(
-  rp.post(ADDRESS, { json: { points } })
+  rp.post(ADDRESS_REDIS, { json: { points } })
 )
   .tap(console.log)
   .then(({ id }) => queryClosestPoints({
@@ -58,6 +59,6 @@ Promise.resolve(
     radius: SCALE * 0.707,
   }))
   .then(({ points, id }) => {
-    return rp.delete(`${ADDRESS}${id}`);
+    return rp.delete(`${ADDRESS_REDIS}${id}`);
   })
   .tap(console.log);

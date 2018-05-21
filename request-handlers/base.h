@@ -36,4 +36,12 @@ void BaseRequestHandler::Log(const std::string &key, const T &value) {
 #endif // DEBUG
 }
 
+template <typename T>
+void BaseRequestHandler::Log(const std::string &key, const T &value) {
+#ifdef DEBUG
+  std::cout << "[" << m_name << "/" << key << "]: ";
+  std::cout << value << std::endl;
+#endif // DEBUG
+}
+
 #endif // __REQUEST_HANDLER__BASE__
