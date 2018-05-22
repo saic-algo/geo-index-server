@@ -42,7 +42,8 @@ function createIndex({ center, scale, count }) {
   const points = _.times(count, () => generateLocation(LOCATION_SHANGHAI, scale));
 
   return Promise.resolve(rp.post(ADDRESS, {
-    json: { type: 'redis', points },
+    json: { type: 's2', points },
+    // json: { type: 'redis', points },
   })).tap(console.log);
 }
 

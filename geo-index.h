@@ -41,7 +41,7 @@ class GeoIndex {
     virtual void AddPoint(const GeoPoint &point) = 0;
     virtual VGeoPointPtr QueryClosestPoints(const GeoPoint &target, int maxCount, double maxRadius) const = 0;
 
-    const std::string &UUID() { return m_uuid; }
+    const std::string &UUID() const { return m_uuid; }
 
   protected:
     const std::string m_uuid;

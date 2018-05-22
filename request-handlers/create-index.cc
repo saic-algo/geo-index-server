@@ -14,7 +14,7 @@ using Poco::JSON::Array;
 using Poco::Net::HTTPServerRequest;
 using Poco::Net::HTTPServerResponse;
 
-const char *REDIS_HOST = "localhost";
+const char *REDIS_HOST = "127.0.0.1";
 const unsigned short REDIS_PORT = 6379;
 
 void CreateIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) {
