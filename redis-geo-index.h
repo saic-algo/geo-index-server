@@ -10,14 +10,7 @@
 
 class RedisGeoIndex : public GeoIndex {
   public:
-    RedisGeoIndex(const char *host, unsigned short port) : GeoIndex(), m_client(host, port) {
-      // Poco::Redis::Command cmd = Poco::Redis::Command::set("mykey", "Hello");
-
-      // std::cout << cmd.toString() << std::endl;
-
-      // std::cout << m_client.execute<Poco::Redis::BulkString>(cmd).value() << std::endl;
-      // std::cout << m_client.execute<std::string>(cmd) << std::endl;
-    }
+    RedisGeoIndex(const char *host, unsigned short port) : GeoIndex(), m_client(host, port) { }
     ~RedisGeoIndex();
       
   public:

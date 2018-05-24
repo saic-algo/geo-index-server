@@ -31,6 +31,7 @@ HTTPRequestHandler* GeoIndexRequestHandlerFactory::createRequestHandler(const HT
       return new QueryIndexRequestHandler(m_registry, match[1]);
 
     if (method == HTTPServerRequest::HTTP_DELETE)
+      std::cout << "Get here" << std::endl;
       return new DeleteIndexRequestHandler(m_registry, match[1]);
   }
 

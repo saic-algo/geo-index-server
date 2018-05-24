@@ -3,6 +3,7 @@
 #include "create-index.h"
 #include "../s2-geo-index.h"
 #include "../redis-geo-index.h"
+#include "../h3-geo-index.h"
 
 using std::string;
 using std::unique_ptr;
@@ -33,6 +34,8 @@ void CreateIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSe
   if (type == "redis") {
     // Redis
     index = make_unique<RedisGeoIndex>(REDIS_HOST, REDIS_PORT);
+  } else if (type == "h3") {
+    index = make_unique<H3GeoIndex>();
   } else {
     // S2
     index = make_unique<S2GeoIndex>();
