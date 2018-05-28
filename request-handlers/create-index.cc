@@ -42,15 +42,12 @@ void CreateIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSe
     index = make_unique<S2GeoIndex>();
   }
 
-  omp_set_num_threads(10);
-
-  #pragma omp parallel for
-
-  for (int i=0; i<points.size(); ++i){
+  for (int i=0; i<(int)points->size(); ++i){
     Array::Ptr point = points->get(i).extract<Array::Ptr>();
     const string &id = point->get(0).toString();
     const double lat = (double)point->get(1);
     const double lng = (double)point->get(2);
+
 
     index->AddPoint(GeoPoint(id, lat, lng));
   }
