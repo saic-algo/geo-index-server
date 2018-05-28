@@ -42,9 +42,16 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
   m_performanceLogger.start("make-query");
 
-  #pragma omp parallel for
-  for (int i=0; i<(int)targets->size(); ++i){
-    Object::Ptr result(new Object);
+  omp_set_num_threads(10);
+  std::cout << "Max num threads: " << omp_get_max_threads() << ", Num threads: " << omp_get_num_threads() << std::endl;
+  
+  int num_query = targets->size();
+
+#pragma omp parallel for num_threads(10)
+  for (int i=0; i<num_query; ++i){
+    
+    std::cout << "Max num threads: " << omp_get_max_threads() << ", Num threads: " << omp_get_num_threads() << ", thread id" << omp_get_thread_num() << std::endl;
+/*    Object::Ptr result(new Object);
     Array::Ptr points(new Array);
 
     auto gg = targets->get(i);
@@ -52,8 +59,8 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
     const string &id = targetPoint->get(0).toString();
     const double lat = (double)targetPoint->get(1);
-    const double lng = (double)targetPoint->get(2);
-
+    const double lng = (double)targetPoint->get(2);*/
+/*
     auto pPoints = pIndex->QueryClosestPoints(GeoPoint(id, lat, lng), count, radius);
 
     for (auto &point: *pPoints) {
@@ -62,13 +69,13 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
     result->set("points", points);
 
-    tempResults[i] = result;
+    tempResults[i] = result;*/
   }
-
+/*
   for(auto& result : tempResults){
     results->add(result);
   }
-/*
+*/
   for (auto &i: *targets) {
     Object::Ptr result(new Object);
     Array::Ptr points(new Array);
@@ -89,7 +96,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
     result->set("points", points);
 
     results->add(result);
-  }*/
+  }
   m_performanceLogger.finish("make-query");
 
   objRes->set("id", m_uuid);

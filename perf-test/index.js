@@ -10,7 +10,7 @@ const LOCATION_SHANGHAI = {
 };
 const POINT_COUNT = 10000;
 const SCALE = 2 * 1000;
-const ADDRESS = 'http://localhost:12345/GeoIndex/';
+const ADDRESS = 'http://localhost:8000/GeoIndex/';
 
 function generateLocation(center, scale) {
   const id = uuid();
@@ -140,10 +140,10 @@ function performanceTests({ center, scales, totalCounts, queryCounts, types }) {
 
 performanceTests({
   center: LOCATION_SHANGHAI,
-  scales: [2000],
-  totalCounts: [100000],
+  scales: [5000],
+  totalCounts: [1000000],
   queryCounts: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-  types: ['s2', 'redis'],
+  types: ['s2'],
 }).then(JSON.stringify).then(console.log);
 
 /*
