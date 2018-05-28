@@ -38,6 +38,8 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   Object::Ptr objRes(new Object);
   Array::Ptr results(new Array);
 
+  vector<Object::Ptr> tempResults(targets->size());
+
   m_performanceLogger.start("make-query");
 
   #pragma omp parallel for
@@ -45,12 +47,22 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
     Object::Ptr result(new Object);
     Array::Ptr points(new Array);
 
-    auto& gg = targets->get(i);
+    auto gg = targets->get(i);
     Array::Ptr targetPoint = gg.extract<Array::Ptr>();
 
     const string &id = targetPoint->get(0).toString();
     const double lat = (double)targetPoint->get(1);
     const double lng = (double)targetPoint->get(2);
+
+    auto pPoints = pIndex->QueryClosestPoints(GeoPoint(id, lat, lng), count, radius);
+
+    for (auto &point: *pPoints) {
+      points->add((const Array::Ptr)point);
+    }
+
+    result->set("points", points);
+
+    tempResults[i] = result;
   }
 
   for (auto &i: *targets) {
