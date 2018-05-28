@@ -65,6 +65,10 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
     tempResults[i] = result;
   }
 
+  for(auto& result : tempResults){
+    results->add(result);
+  }
+/*
   for (auto &i: *targets) {
     Object::Ptr result(new Object);
     Array::Ptr points(new Array);
@@ -85,7 +89,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
     result->set("points", points);
 
     results->add(result);
-  }
+  }*/
   m_performanceLogger.finish("make-query");
 
   objRes->set("id", m_uuid);
