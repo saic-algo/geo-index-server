@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <regex>
+#include "omp.h"
 
 #include <Poco/JSON/Parser.h>
 #include <Poco/URI.h>
@@ -38,6 +39,20 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   Array::Ptr results(new Array);
 
   m_performanceLogger.start("make-query");
+
+  #pragma omp parallel for
+  for (int i=0; i<(int)targets->size(); ++i){
+    Object::Ptr result(new Object);
+    Array::Ptr points(new Array);
+
+    auto& gg = targets->get(i);
+    Array::Ptr targetPoint = gg.extract<Array::Ptr>();
+
+    const string &id = targetPoint->get(0).toString();
+    const double lat = (double)targetPoint->get(1);
+    const double lng = (double)targetPoint->get(2);
+  }
+
   for (auto &i: *targets) {
     Object::Ptr result(new Object);
     Array::Ptr points(new Array);
