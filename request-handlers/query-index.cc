@@ -4,6 +4,7 @@
 #include <string>
 #include <regex>
 #include <thread>
+#include <mutex>
 #include "omp.h"
 
 #include <Poco/JSON/Parser.h>
@@ -19,9 +20,12 @@ using std::vector;
 using Poco::JSON::Object;
 using Poco::JSON::Array;
 
+std::mutex mtx;   // mutex for critical section
+
 const GeoIndex *pIndex;
 std::vector<Object::Ptr> tempResults;
 Array::Ptr targets;
+Array::Ptr results;
 double radius;
 int count;
 
@@ -46,7 +50,9 @@ void batchProcessQuery(int start, int end)
 
     result->set("points", points);
 
-    tempResults[i] = result;
+    mtx.lock();
+    results->add(result);
+    mtx.unlock();
   }
 }
 
@@ -70,7 +76,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   radius = object->get("radius");
 
   Object::Ptr objRes(new Object);
-  Array::Ptr results(new Array);
+  results = new Array;
 
   m_performanceLogger.start("make-query");
 
@@ -80,7 +86,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   
   int batch_size = (num_query + num_threads - 1) / num_threads;
 
-  tempResults = std::vector<Object::Ptr>(num_query);
+//  tempResults = std::vector<Object::Ptr>(num_query);
 
   std::cout <<"num_threads: " << num_threads << ", num_query: " << num_query << ", batch_size: " << batch_size << std::endl;
 
