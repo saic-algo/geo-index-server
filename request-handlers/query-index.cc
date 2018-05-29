@@ -25,9 +25,9 @@ class QueryRunnable : public Poco::Runnable
 public:
   static int id;
   QueryRunnable(const GeoIndex *pIndex, Array::Ptr targets, int count, double radius, int start, int end, vector<Object::Ptr>& results)
-  : pIndex(pIndex), targets(targets), count(count), radius(radius), start(start), end(end), results(results) { 
+  : pIndex(pIndex), targets(targets), count(count), radius(radius), start(start), end(end){ 
     id = id+1;
-    std::cout << "Create QueryRunnable " << id << std::endl;
+    std::cout << "Create QueryRunnable " << id << "(" << start << "," << end << ")" << std::endl;
   }
 
   virtual void run()
@@ -52,8 +52,9 @@ public:
 
       result->set("points", points);
 
-      results[i] = result;
+      tempResults[i] = result;
     }
+    std::cout << id << " has finished." << std::endl;
   }
 
 private:
@@ -61,7 +62,6 @@ private:
   const Array::Ptr targets;
   int start, end, count;
   double radius;
-  vector<Object::Ptr>& results;
 };
 
 int QueryRunnable::id = 0;
@@ -107,13 +107,15 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
     int end = start + batch_size;
     if(end > num_query)
       end = num_query;
-      QueryRunnable hello(pIndex, targets, count, radius, start, end, tempResults);
-      threads[i].start(hello);
+    QueryRunnable hello(pIndex, targets, count, radius, start, end, tempResults);
+    threads[i].start(hello);
   }
 
   for (auto& thread : threads) {
       thread.join();
   }
+
+  std::cout << "here" << std::endl;
 
   for(int i=0; i<(int)tempResults.size(); ++i){
     results->add(tempResults[i]);
