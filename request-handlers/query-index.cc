@@ -24,8 +24,8 @@ public:
   static int id;
   QueryRunnable(const GeoIndex *pIndex, Array::Ptr targets, int i)
   : pIndex(pIndex), targets(targets), i(i) { 
-    id = id+1
-    std::cout << "Create QueryRunnable " << id << std::endll;
+    id = id+1;
+    std::cout << "Create QueryRunnable " << id << std::endl;
   }
 
   virtual void run()
@@ -40,7 +40,7 @@ public:
     const double lat = (double)targetPoint->get(1);
     const double lng = (double)targetPoint->get(2);
 
-    auto pPoints = pIndex->QueryClosestPoints(GeoPoint(id, lat, lng), count, radius);
+    auto pPoints = pIndex->QueryClosestPoints(GeoPoint(id, lat, lng), 100, 5000);
 
     // for (auto &point: *pPoints) {
     //   points->add((const Array::Ptr)point);
@@ -86,8 +86,9 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   m_performanceLogger.start("make-query");
 
   std::vector<Poco::Thread> threads(10);
+  int ii = 0;
   for (auto& thread : threads) {
-      QueryRunnable hello(pIndex, targets, i);
+      QueryRunnable hello(pIndex, targets, ii++);
       thread.start(hello);
   }
 
