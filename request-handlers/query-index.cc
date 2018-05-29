@@ -89,7 +89,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   Object::Ptr objRes(new Object);
   Array::Ptr results(new Array);
 
-  vector<Object::Ptr> tempResults(targets->size());
+//  vector<Object::Ptr> tempResults(targets->size());
 
   m_performanceLogger.start("make-query");
 
@@ -125,8 +125,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
     Object::Ptr result(new Object);
     Array::Ptr points(new Array);
 
-    auto gg = targets->get(i);
-    Array::Ptr targetPoint = gg.extract<Array::Ptr>();
+    Array::Ptr targetPoint = targets->get(i).extract<Array::Ptr>();
 
     const string &id = targetPoint->get(0).toString();
     const double lat = (double)targetPoint->get(1);
@@ -140,12 +139,17 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
     result->set("points", points);
 
-    tempResults[i] = result;
+#pragma omp critical
+    {
+      results->add(result);
+    }
+
+//    tempResults[i] = result;
   }
 
-  for(int i=0; i<(int)tempResults.size(); ++i){
-    results->add(tempResults[i]);
-  }
+  // for(int i=0; i<(int)tempResults.size(); ++i){
+  //   results->add(tempResults[i]);
+  // }
 /*
   for (auto &i: *targets) {
     Object::Ptr result(new Object);
