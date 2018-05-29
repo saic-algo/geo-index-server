@@ -27,7 +27,6 @@ int count;
 
 void batchProcessQuery(int start, int end)
 {
-  std::cout << "Processing Query(" << start << "," << end << ")" << std::endl;
   for(int i=start; i<end; ++i)
   {
     Object::Ptr result(new Object);
@@ -49,7 +48,6 @@ void batchProcessQuery(int start, int end)
 
     tempResults[i] = result;
   }
-  std::cout << start << " to " << end << " has finished." << std::endl;
 }
 
 void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) {
@@ -99,8 +97,6 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   for (auto& thread : threads) {
       thread.join();
   }
-
-  std::cout << "here" << std::endl;
 
   for(int i=0; i<(int)tempResults.size(); ++i){
     results->add(tempResults[i]);
