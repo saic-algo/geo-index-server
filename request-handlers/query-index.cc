@@ -104,9 +104,9 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
       thread.join();
   }
 
-  for(int i=0; i<(int)tempResults.size(); ++i){
-    results->add(tempResults[i]);
-  }
+//  for(int i=0; i<(int)tempResults.size(); ++i){
+//    results->add(tempResults[i]);
+//  }
 
 /*
   for (auto &i: *targets) {
