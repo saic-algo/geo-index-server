@@ -50,9 +50,10 @@ void batchProcessQuery(int start, int end)
 
     result->set("points", points);
 
-    mtx.lock();
-    results->add(result);
-    mtx.unlock();
+    tempResults[i] = result;
+    // mtx.lock();
+    // results->add(result);
+    // mtx.unlock();
   }
 }
 
@@ -86,7 +87,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   
   int batch_size = (num_query + num_threads - 1) / num_threads;
 
-//  tempResults = std::vector<Object::Ptr>(num_query);
+  tempResults = std::vector<Object::Ptr>(num_query);
 
   std::cout <<"num_threads: " << num_threads << ", num_query: " << num_query << ", batch_size: " << batch_size << std::endl;
 
@@ -104,9 +105,9 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
       thread.join();
   }
 
-//  for(int i=0; i<(int)tempResults.size(); ++i){
-//    results->add(tempResults[i]);
-//  }
+ for(int i=0; i<(int)tempResults.size(); ++i){
+   results->add(tempResults[i]);
+ }
 
 /*
   for (auto &i: *targets) {
