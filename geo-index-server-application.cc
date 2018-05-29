@@ -77,12 +77,6 @@ int GeoIndexServerApplication::main(const std::vector<std::string>& args)
 
 int main(int argc, char** argv)
 {
-  omp_set_num_threads(10);
-  #pragma omp parallel for num_threads(10)
-  for (char i='a'; i<='z'; ++i){    
-    std::cout << "Max num threads: " << omp_get_max_threads() << ", Num threads: " << omp_get_num_threads() << ", thread id" << omp_get_thread_num() << std::endl;
-  }
-
   GeoIndexServerApplication app;
   return app.run(argc, argv);
 }
