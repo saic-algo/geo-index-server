@@ -24,16 +24,14 @@ function generateLocation(center, scale) {
   return [id, latitude, longitude];
 }
 
-function queryClosestPoints({ id, target, count, radius }) {
+function queryClosestPoints({ id, targets, count, radius }) {
   const uri = `${ADDRESS}${id}`;
 
   return Promise.resolve(rp.post(uri, {
     json: {
       radius,
       count,
-      points: [
-        target,
-      ]
+      points: targets,
     }
   }));
 }
@@ -77,7 +75,7 @@ function consistencyTest({ points, idRedis, idS2, target, count, radius }) {
   const pointHash = _.zipObject(_.map(points, _.head), _.map(points, _.tail));
 
   Promise
-    .map([idRedis, idS2], id => queryClosestPoints({ id, target, count, radius }))
+    .map([idRedis, idS2], id => queryClosestPoints({ id, targets: [target], count, radius }))
     .spread((responseRedis, responseS2) => {
       const [pointsRedis, pointsS2] = _.map([
         responseRedis,
@@ -101,14 +99,14 @@ function consistencyTest({ points, idRedis, idS2, target, count, radius }) {
     });
 }
 
-function performanceTests({ center, scales, totalCounts, queryCounts, types }) {
+function performanceTests({ center, scales, totalCounts, queryCounts, queryCount, types }) {
   const results = { Create: [], Query: [] };
 
   return Promise.mapSeries(scales, scale => Promise.mapSeries(totalCounts, totalCount => {
     console.error(`Generating ${totalCount} points in ${scale}m ^ 2`);
 
     const points = createRandomPoints({ center, scale, count: totalCount });
-    const target = generateLocation(center, scale);
+    const targets = createRandomPoints({ center, scale, count: queryCount });
 
     return Promise.mapSeries(types, (type) => {
       const setup = { scale, totalCount, type };
@@ -124,7 +122,7 @@ function performanceTests({ center, scales, totalCounts, queryCounts, types }) {
 
         return queryClosestPoints({
           id,
-          target,
+          targets,
           count: queryCount,
           radius: scale * 0.707,
         }).tap((res) => {
@@ -143,6 +141,7 @@ performanceTests({
   scales: [2000, 10000, 50000],
   totalCounts: [10000, 100000, 1000000],
   queryCounts: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+  queryCount: 1000,
   types: ['s2', 'redis'],
 }).then(JSON.stringify).then(console.log);
 
