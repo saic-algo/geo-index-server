@@ -45,7 +45,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   std::cout << "Max num threads: " << omp_get_max_threads() << ", Num threads: " << omp_get_num_threads() << ", thread id " << omp_get_thread_num() << std::endl;
 
 #pragma omp parallel for num_threads(num_threads)
-  for(int i=0; i<num_query; ++i)
+  for(int i=0; i<(int)targets->size(); ++i)
   {
     // std::cout << "Max num threads: " << omp_get_max_threads() << ", Num threads: " << omp_get_num_threads() << ", thread id " << omp_get_thread_num() << std::endl;
     Object::Ptr result(new Object);
