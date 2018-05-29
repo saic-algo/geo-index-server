@@ -7,6 +7,8 @@
 
 #include <Poco/JSON/Parser.h>
 #include <Poco/URI.h>
+#include <Poco/Thread.h>
+#include <Poco/Runnable.h>
 
 #include "query-index.h"
 
@@ -15,6 +17,18 @@ using std::vector;
 
 using Poco::JSON::Object;
 using Poco::JSON::Array;
+
+class HelloRunnable : public Poco::Runnable
+{
+    static int id;
+    virtual void run()
+    {
+        id++;
+        std::cout << "Hello, runnable world num " << id << "!" << std::endl;
+    }
+};
+
+int HelloRunnable::id = 0;
 
 void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) {
   // Find the index
@@ -41,6 +55,16 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   vector<Object::Ptr> tempResults(targets->size());
 
   m_performanceLogger.start("make-query");
+
+  std::vector<Poco::Thread> threads(10);
+  for (auto& thread : threads) {
+      HelloRunnable hello;
+      thread.start(hello);
+  }
+
+  for (auto& thread : threads) {
+      thread.join();
+  }
 
   omp_set_num_threads(10);
   std::cout << "Max num threads: " << omp_get_max_threads() << ", Num threads: " << omp_get_num_threads() << std::endl;
