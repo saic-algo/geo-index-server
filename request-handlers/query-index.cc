@@ -22,39 +22,44 @@ class QueryRunnable : public Poco::Runnable
 {
 public:
   static int id;
-  QueryRunnable(const GeoIndex *pIndex, Array::Ptr targets, int i)
-  : pIndex(pIndex), targets(targets), i(i) { 
+  QueryRunnable(const GeoIndex *pIndex, Array::Ptr targets, int count, double radius, int start, int end, vector<Object::Ptr>& results)
+  : pIndex(pIndex), targets(targets), count(count), radius(radius), start(start), end(end), results(results) { 
     id = id+1;
     std::cout << "Create QueryRunnable " << id << std::endl;
   }
 
   virtual void run()
   {
-    Object::Ptr result(new Object);
-    Array::Ptr points(new Array);
+    for(int i=start; i<end; ++i)
+    {
+      Object::Ptr result(new Object);
+      Array::Ptr points(new Array);
 
-    auto gg = targets->get(i);
-    Array::Ptr targetPoint = gg.extract<Array::Ptr>();
+      auto gg = targets->get(i);
+      Array::Ptr targetPoint = gg.extract<Array::Ptr>();
 
-    const string &id = targetPoint->get(0).toString();
-    const double lat = (double)targetPoint->get(1);
-    const double lng = (double)targetPoint->get(2);
+      const string &id = targetPoint->get(0).toString();
+      const double lat = (double)targetPoint->get(1);
+      const double lng = (double)targetPoint->get(2);
 
-    auto pPoints = pIndex->QueryClosestPoints(GeoPoint(id, lat, lng), 100, 5000);
+      auto pPoints = pIndex->QueryClosestPoints(GeoPoint(id, lat, lng), count, radius);
 
-    // for (auto &point: *pPoints) {
-    //   points->add((const Array::Ptr)point);
-    // }
+      for (auto &point: *pPoints) {
+        points->add((const Array::Ptr)point);
+      }
 
-    // result->set("points", points);
+      result->set("points", points);
 
-    // tempResults[i] = result;
+      results[i] = result;
+    }
   }
 
 private:
   const GeoIndex *pIndex;
   const Array::Ptr targets;
-  int i;
+  int start, end, count;
+  double radius;
+  vector<Object::Ptr>& results;
 };
 
 int QueryRunnable::id = 0;
@@ -85,16 +90,28 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
   m_performanceLogger.start("make-query");
 
-  std::vector<Poco::Thread> threads(10);
-  int ii = 0;
-  for (auto& thread : threads) {
-      QueryRunnable hello(pIndex, targets, ii++);
+  int num_threads = 10;
+  int num_query = targets->size();
+  int batch_size = (num_query + num_threads - 1) / num_threads;
+
+  std::vector<Poco::Thread> threads(num_threads);
+
+  for(int i=0; i<num_threads; ++i){
+    int start = i * batch_size;
+    int end = start + batch_size;
+    if(end > num_query)
+      end = num_query;
+      QueryRunnable hello(pIndex, targets, count, radius, start, end, tempResults);
       thread.start(hello);
   }
 
   for (auto& thread : threads) {
       thread.join();
   }
+
+  // for(int i=0; i<(int)tempResults.size(); ++i){
+  //   results->add(tempResults[i]);
+  // }
 
   for (auto &i: *targets) {
     Object::Ptr result(new Object);
@@ -117,6 +134,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
     results->add(result);
   }
+
   m_performanceLogger.finish("make-query");
 
   objRes->set("id", m_uuid);
