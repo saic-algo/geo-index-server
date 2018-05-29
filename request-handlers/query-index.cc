@@ -93,7 +93,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
   m_performanceLogger.start("make-query");
 
-  int num_threads = 10;
+  int num_threads = 16;
   int num_query = targets->size();
 /*  
   int num_query = targets->size();
@@ -121,7 +121,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 #pragma omp parallel for num_threads(num_threads)
   for(int i=0; i<num_query; ++i)
   {
-    //std::cout << "Max num threads: " << omp_get_max_threads() << ", Num threads: " << omp_get_num_threads() << ", thread id " << omp_get_thread_num() << std::endl;
+    // std::cout << "Max num threads: " << omp_get_max_threads() << ", Num threads: " << omp_get_num_threads() << ", thread id " << omp_get_thread_num() << std::endl;
     Object::Ptr result(new Object);
     Array::Ptr points(new Array);
 
