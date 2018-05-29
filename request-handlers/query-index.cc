@@ -7,6 +7,8 @@
 
 #include <Poco/JSON/Parser.h>
 #include <Poco/URI.h>
+#include <Poco/Thread.h>
+#include <Poco/Runnable.h>
 
 #include "query-index.h"
 
@@ -15,6 +17,54 @@ using std::vector;
 
 using Poco::JSON::Object;
 using Poco::JSON::Array;
+
+std::vector<Object::Ptr> tempResults;
+
+class QueryRunnable : public Poco::Runnable
+{
+public:
+  static int id;
+  QueryRunnable(const GeoIndex *pIndex, Array::Ptr targets, int count, double radius, int start, int end, vector<Object::Ptr>& results)
+  : pIndex(pIndex), targets(targets), count(count), radius(radius), start(start), end(end), results(results) { 
+    id = id+1;
+    std::cout << "Create QueryRunnable " << id << std::endl;
+  }
+
+  virtual void run()
+  {
+    for(int i=start; i<end; ++i)
+    {
+      Object::Ptr result(new Object);
+      Array::Ptr points(new Array);
+
+      auto gg = targets->get(i);
+      Array::Ptr targetPoint = gg.extract<Array::Ptr>();
+
+      const string &id = targetPoint->get(0).toString();
+      const double lat = (double)targetPoint->get(1);
+      const double lng = (double)targetPoint->get(2);
+      
+      auto pPoints = pIndex->QueryClosestPoints(GeoPoint(id, lat, lng), count, radius);
+
+      for (auto &point: *pPoints) {
+        points->add((const Array::Ptr)point);
+      }
+
+      result->set("points", points);
+
+      results[i] = result;
+    }
+  }
+
+private:
+  const GeoIndex *pIndex;
+  const Array::Ptr targets;
+  int start, end, count;
+  double radius;
+  vector<Object::Ptr>& results;
+};
+
+int QueryRunnable::id = 0;
 
 void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) {
   // Find the index
@@ -40,18 +90,42 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
   m_performanceLogger.start("make-query");
 
+  int num_query = targets->size();
   int num_threads = 16;
-  omp_set_num_threads(num_threads);
-  std::cout << "Max num threads: " << omp_get_max_threads() << ", Num threads: " << omp_get_num_threads() << ", thread id " << omp_get_thread_num() << std::endl;
+  num_threads = num_query > num_threads ? num_threads : num_query;
+  
+  int batch_size = (num_query + num_threads - 1) / num_threads;
 
-#pragma omp parallel for num_threads(num_threads)
-  for(int i=0; i<num_query; ++i)
-  {
-    // std::cout << "Max num threads: " << omp_get_max_threads() << ", Num threads: " << omp_get_num_threads() << ", thread id " << omp_get_thread_num() << std::endl;
+  tempResults.resize(num_query);
+
+  std::cout <<"num_threads: " << num_threads << ", num_query: " << num_query << ", batch_size: " << batch_size << std::endl;
+
+  std::vector<Poco::Thread> threads(num_threads);
+
+  for(int i=0; i<num_threads; ++i){
+    int start = i * batch_size;
+    int end = start + batch_size;
+    if(end > num_query)
+      end = num_query;
+      QueryRunnable hello(pIndex, targets, count, radius, start, end, tempResults);
+      threads[i].start(hello);
+  }
+
+  for (auto& thread : threads) {
+      thread.join();
+  }
+
+  for(int i=0; i<(int)tempResults.size(); ++i){
+    results->add(tempResults[i]);
+  }
+
+/*
+  for (auto &i: *targets) {
     Object::Ptr result(new Object);
     Array::Ptr points(new Array);
 
-    Array::Ptr targetPoint = targets->get(i).extract<Array::Ptr>();
+    Array::Ptr targetPoint = i.extract<Array::Ptr>();
+    result->set("target", targetPoint);
 
     const string &id = targetPoint->get(0).toString();
     const double lat = (double)targetPoint->get(1);
@@ -65,13 +139,9 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
     result->set("points", points);
 
-#pragma omp critical
-    {
-      results->add(result);
-    }
-
+    results->add(result);
   }
-
+*/
   m_performanceLogger.finish("make-query");
 
   objRes->set("id", m_uuid);
