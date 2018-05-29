@@ -3,12 +3,13 @@
 #include <vector>
 #include <string>
 #include <regex>
+#include <thread>
 #include "omp.h"
 
 #include <Poco/JSON/Parser.h>
 #include <Poco/URI.h>
-#include <Poco/Thread.h>
-#include <Poco/Runnable.h>
+// #include <Poco/Thread.h>
+// #include <Poco/Runnable.h>
 
 #include "query-index.h"
 
@@ -18,57 +19,44 @@ using std::vector;
 using Poco::JSON::Object;
 using Poco::JSON::Array;
 
+const GeoIndex *pIndex;
 std::vector<Object::Ptr> tempResults;
-GeoIndex *pIndex;
 Array::Ptr targets;
 double radius;
 int count;
 
-class QueryRunnable : public Poco::Runnable
+void batchProcessQuery(int start, int end)
 {
-public:
-  QueryRunnable(int id, int start, int end)
-  : id(id), start(start), end(end){ 
-    std::cout << "Create QueryRunnable " << id << "(" << start << "," << end << ")" << std::endl;
-  }
-
-  virtual void run()
+  std::cout << "Processing Query(" << start << "," << end << ")" << std::endl;
+  for(int i=start; i<end; ++i)
   {
-    for(int i=start; i<end; ++i)
-    {
-      Object::Ptr result(new Object);
-      Array::Ptr points(new Array);
+    Object::Ptr result(new Object);
+    Array::Ptr points(new Array);
 
-      Array::Ptr targetPoint = targets->get(i).extract<Array::Ptr>();
+    Array::Ptr targetPoint = targets->get(i).extract<Array::Ptr>();
 
-      const string &id = targetPoint->get(0).toString();
-      const double lat = (double)targetPoint->get(1);
-      const double lng = (double)targetPoint->get(2);
-      
-      auto pPoints = pIndex->QueryClosestPoints(GeoPoint(id, lat, lng), count, radius);
+    const string &id = targetPoint->get(0).toString();
+    const double lat = (double)targetPoint->get(1);
+    const double lng = (double)targetPoint->get(2);
+    
+    auto pPoints = pIndex->QueryClosestPoints(GeoPoint(id, lat, lng), count, radius);
 
-      for (auto &point: *pPoints) {
-        points->add((const Array::Ptr)point);
-      }
-
-      result->set("points", points);
-
-      tempResults[i] = result;
+    for (auto &point: *pPoints) {
+      points->add((const Array::Ptr)point);
     }
-    std::cout << id << " has finished." << std::endl;
+
+    result->set("points", points);
+
+    tempResults[i] = result;
   }
-
-private:
-  int start, end, id;
-};
-
-int QueryRunnable::id = 0;
+  std::cout << start << " to " << end << " has finished." << std::endl;
+}
 
 void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) {
   // Find the index
   Log("URI", request.getURI());
 
-  GeoIndex *pIndex = m_registry.GetGeoIndex(m_uuid);
+  pIndex = m_registry.GetGeoIndex(m_uuid);
 
   if (!pIndex) {
     BadRequest(response);
@@ -98,15 +86,14 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
   std::cout <<"num_threads: " << num_threads << ", num_query: " << num_query << ", batch_size: " << batch_size << std::endl;
 
-  std::vector<Poco::Thread> threads(num_threads);
+  std::vector<std::thread> threads;
 
   for(int i=0; i<num_threads; ++i){
     int start = i * batch_size;
     int end = start + batch_size;
     if(end > num_query)
       end = num_query;
-    QueryRunnable hello(start, end);
-    threads[i].start(hello);
+    threads.push_back(std::thread(batchProcessQuery, start, end));
   }
 
   for (auto& thread : threads) {
