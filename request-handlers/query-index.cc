@@ -19,14 +19,16 @@ using Poco::JSON::Object;
 using Poco::JSON::Array;
 
 std::vector<Object::Ptr> tempResults;
+GeoIndex *pIndex;
+Array::Ptr targets;
+double radius;
+int count;
 
 class QueryRunnable : public Poco::Runnable
 {
 public:
-  static int id;
-  QueryRunnable(const GeoIndex *pIndex, Array::Ptr targets, int count, double radius, int start, int end, vector<Object::Ptr>& results)
-  : pIndex(pIndex), targets(targets), count(count), radius(radius), start(start), end(end){ 
-    id = id+1;
+  QueryRunnable(int id, int start, int end)
+  : id(id), start(start), end(end){ 
     std::cout << "Create QueryRunnable " << id << "(" << start << "," << end << ")" << std::endl;
   }
 
@@ -37,8 +39,7 @@ public:
       Object::Ptr result(new Object);
       Array::Ptr points(new Array);
 
-      auto gg = targets->get(i);
-      Array::Ptr targetPoint = gg.extract<Array::Ptr>();
+      Array::Ptr targetPoint = targets->get(i).extract<Array::Ptr>();
 
       const string &id = targetPoint->get(0).toString();
       const double lat = (double)targetPoint->get(1);
@@ -58,10 +59,7 @@ public:
   }
 
 private:
-  const GeoIndex *pIndex;
-  const Array::Ptr targets;
-  int start, end, count;
-  double radius;
+  int start, end, id;
 };
 
 int QueryRunnable::id = 0;
@@ -70,7 +68,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   // Find the index
   Log("URI", request.getURI());
 
-  const GeoIndex *pIndex = m_registry.GetGeoIndex(m_uuid);
+  GeoIndex *pIndex = m_registry.GetGeoIndex(m_uuid);
 
   if (!pIndex) {
     BadRequest(response);
@@ -81,9 +79,9 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   const Object::Ptr object = ReadRequestBody(request);
   m_performanceLogger.finish("parse-request-body");
 
-  const Array::Ptr targets = object->get("points").extract<Array::Ptr>();
-  const int count = object->get("count");
-  const double radius = object->get("radius");
+  targets = object->get("points").extract<Array::Ptr>();
+  count = object->get("count");
+  radius = object->get("radius");
 
   Object::Ptr objRes(new Object);
   Array::Ptr results(new Array);
@@ -96,7 +94,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   
   int batch_size = (num_query + num_threads - 1) / num_threads;
 
-  tempResults.resize(num_query);
+  tempResults = std::vector<Object::Ptr>(num_query);
 
   std::cout <<"num_threads: " << num_threads << ", num_query: " << num_query << ", batch_size: " << batch_size << std::endl;
 
@@ -107,7 +105,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
     int end = start + batch_size;
     if(end > num_query)
       end = num_query;
-    QueryRunnable hello(pIndex, targets, count, radius, start, end, tempResults);
+    QueryRunnable hello(start, end);
     threads[i].start(hello);
   }
 
