@@ -30,6 +30,7 @@ public:
 
   virtual void run()
   {
+    std::cout << "here0(" << start << "," <<end << ")" << std::endl;
     for(int i=start; i<end; ++i)
     {
       Object::Ptr result(new Object);
@@ -41,7 +42,8 @@ public:
       const string &id = targetPoint->get(0).toString();
       const double lat = (double)targetPoint->get(1);
       const double lng = (double)targetPoint->get(2);
-
+      
+      std::cout << "here1" << std::endl;
       auto pPoints = pIndex->QueryClosestPoints(GeoPoint(id, lat, lng), count, radius);
 
       for (auto &point: *pPoints) {
@@ -52,6 +54,7 @@ public:
 
       results[i] = result;
     }
+    std::cout << "here2" << std::endl;
   }
 
 private:
@@ -93,6 +96,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   int num_threads = 10;
   int num_query = targets->size();
   int batch_size = (num_query + num_threads - 1) / num_threads;
+  std::cout <<"num_threads: " << num_threads << ", num_query: " << num_query << ", batch_size: " << batch_size << std::endl;
 
   std::vector<Poco::Thread> threads(num_threads);
 
@@ -102,17 +106,17 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
     if(end > num_query)
       end = num_query;
       QueryRunnable hello(pIndex, targets, count, radius, start, end, tempResults);
-      thread.start(hello);
+      threads[i].start(hello);
   }
 
   for (auto& thread : threads) {
       thread.join();
   }
 
-  // for(int i=0; i<(int)tempResults.size(); ++i){
-  //   results->add(tempResults[i]);
-  // }
-
+  for(int i=0; i<(int)tempResults.size(); ++i){
+    results->add(tempResults[i]);
+  }
+/*
   for (auto &i: *targets) {
     Object::Ptr result(new Object);
     Array::Ptr points(new Array);
@@ -134,7 +138,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
     results->add(result);
   }
-
+*/
   m_performanceLogger.finish("make-query");
 
   objRes->set("id", m_uuid);
