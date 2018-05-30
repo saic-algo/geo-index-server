@@ -29,8 +29,9 @@ Array::Ptr results;
 double radius;
 int count;
 
-void batchProcessQuery(int start, int end)
+void batchProcessQuery(int id, int start, int end)
 {
+	float startTime = (float)clock()/CLOCKS_PER_SEC;
   for(int i=start; i<end; ++i)
   {
     Object::Ptr result(new Object);
@@ -55,6 +56,8 @@ void batchProcessQuery(int start, int end)
     // results->add(result);
     // mtx.unlock();
   }
+	float endTime = (float)clock()/CLOCKS_PER_SEC;
+	std::cout << "Thread " << id << " starts at " << startTime << ", end at " << endTime << ", duration " << endTime - startTime << " seconds." <<std::endl;
 }
 
 void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) {
@@ -82,7 +85,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   m_performanceLogger.start("make-query");
 
   int num_query = targets->size();
-  int num_threads = 16;
+  int num_threads = 4;
   num_threads = num_query > num_threads ? num_threads : num_query;
   
   int batch_size = (num_query + num_threads - 1) / num_threads;
@@ -93,49 +96,34 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
   std::vector<std::thread> threads;
 
+  m_performanceLogger.start("start-thread");
   for(int i=0; i<num_threads; ++i){
     int start = i * batch_size;
     int end = start + batch_size;
     if(end > num_query)
       end = num_query;
-    threads.push_back(std::thread(batchProcessQuery, start, end));
+    threads.push_back(std::thread(batchProcessQuery, i, start, end));
   }
+  m_performanceLogger.finish("start-thread");
 
+  m_performanceLogger.start("run-thread");
   for (auto& thread : threads) {
       thread.join();
   }
+  m_performanceLogger.finish("run-thread");
 
  for(int i=0; i<(int)tempResults.size(); ++i){
    results->add(tempResults[i]);
  }
 
-/*
-  for (auto &i: *targets) {
-    Object::Ptr result(new Object);
-    Array::Ptr points(new Array);
-
-    Array::Ptr targetPoint = i.extract<Array::Ptr>();
-    result->set("target", targetPoint);
-
-    const string &id = targetPoint->get(0).toString();
-    const double lat = (double)targetPoint->get(1);
-    const double lng = (double)targetPoint->get(2);
-
-    auto pPoints = pIndex->QueryClosestPoints(GeoPoint(id, lat, lng), count, radius);
-
-    for (auto &point: *pPoints) {
-      points->add((const Array::Ptr)point);
-    }
-
-    result->set("points", points);
-
-    results->add(result);
-  }
-*/
   m_performanceLogger.finish("make-query");
 
   objRes->set("id", m_uuid);
   objRes->set("results", results);
+
+  for (auto &pair: m_performanceLogger) {
+    std::cout << pair.first << " takes " << pair.second << " seconds" << std::endl;
+  }
 
   SendResponse(response, objRes);
 }

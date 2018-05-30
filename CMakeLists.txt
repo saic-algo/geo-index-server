@@ -15,7 +15,7 @@ add_executable(
   request-handlers/query-index.cc
 )
 
-target_link_libraries(test-server PocoNet PocoUtil PocoFoundation PocoJSON PocoRedis s2 h3)
+target_link_libraries(test-server PocoNet PocoUtil PocoFoundation PocoJSON PocoRedis s2 h3 pthread)
 
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (CMAKE_CXX_FLAGS_DEBUG "-DDEBUG")
