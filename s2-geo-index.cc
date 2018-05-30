@@ -22,7 +22,7 @@ VGeoPointPtr S2GeoIndex::QueryClosestPoints(const GeoPoint &target, int maxCount
 
   S1Angle maxRadiusAng = S1Angle::Radians(S2Earth::KmToRadians(maxRadius));
 
-  s2query.mutable_options()->set_max_points(maxCount);
+  s2query.mutable_options()->set_max_results(maxCount);
   s2query.mutable_options()->set_max_distance(maxRadiusAng);
 
   auto results = s2query.FindClosestPoints(&s2target);
