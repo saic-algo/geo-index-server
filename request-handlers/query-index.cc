@@ -85,7 +85,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   m_performanceLogger.start("make-query");
 
   int num_query = targets->size();
-  int num_threads = 64;
+  int num_threads = 16;
   num_threads = num_query > num_threads ? num_threads : num_query;
   threadLogs.clear();
   threadLogs.resize(num_threads);
@@ -108,8 +108,6 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
     ++index;
   }
   m_performanceLogger.finish("parsing-query");
-
-  std::cout <<"num_threads: " << num_threads << ", num_query: " << num_query << ", batch_size: " << batch_size << "\n";
 
   std::vector<std::thread> threads;
 
@@ -138,6 +136,8 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   objRes->set("id", m_uuid);
   objRes->set("results", results);
 
+  std::cout << "===================================== Processing KNN-" << count << "=====================================\n";
+  std::cout <<"num_threads: " << num_threads << ", num_query: " << num_query << ", batch_size: " << batch_size << "\n";
   for (auto &pair: m_performanceLogger) {
     std::cout << pair.first << " takes " << pair.second << " seconds\n";
   }
@@ -145,6 +145,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   for(auto &ostr : threadLogs){
     std::cout << ostr.str() << "\n";
   }
+  std::cout << "===================================== Finish of  KNN-" << count << "=====================================\n\n";
 
   SendResponse(response, objRes);
 }
