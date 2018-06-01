@@ -6,6 +6,7 @@
 #include <regex>
 #include <thread>
 #include <mutex>
+#include <cassert>
 #include "../s2-geo-index.h"
 #include "omp.h"
 
@@ -26,6 +27,7 @@ std::mutex mtx;   // mutex for critical section
 
 const S2GeoIndex *Indicies[64];
 std::vector<Object::Ptr> tempResults;
+std::vector<int> queryCounter;
 Array::Ptr targets;
 Array::Ptr results;
 double radius;
@@ -52,9 +54,10 @@ void batchProcessQuery(int id, int start, int end)
     result->set("points", points);
 
     tempResults[i] = result;
-    // mtx.lock();
-    // results->add(result);
-    // mtx.unlock();
+
+//    mtx.lock();
+    queryCounter[i]++;
+//    mtx.unlock();
   }
 
   float endTime = (float)clock()/CLOCKS_PER_SEC;
@@ -68,7 +71,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   GeoIndex *pIndex = const_cast<GeoIndex*>(m_registry.GetGeoIndex(m_uuid));
   S2GeoIndex *pS2Index = dynamic_cast<S2GeoIndex*>(pIndex);
 
-  for(int i=0; i<64; ++i){
+  for(int i=0; i<4; ++i){
   	Indicies[i] = new S2GeoIndex(*pS2Index);
   }
 
@@ -97,6 +100,8 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   threadLogs.resize(num_threads);
 
   int batch_size = (num_query + num_threads - 1) / num_threads;
+  queryCounter.clear();
+  queryCounter.resize(num_query);
 
   tempResults = std::vector<Object::Ptr>(num_query);
   pids.resize(num_query);
@@ -153,11 +158,13 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   }
   std::cout << "===================================== Finish of  KNN-" << count << "=====================================\n\n";
 
-  for(int i=0; i<64; ++i){
+  for(int i=0; i<num_threads; ++i){
   	delete Indicies[i];
   	Indicies[i] = nullptr;
   }
-
+  for(int& c : queryCounter){
+    assert(c == 1);
+  }
   SendResponse(response, objRes);
 }
 

@@ -18,7 +18,7 @@ add_executable(
 target_link_libraries(test-server PocoNet PocoUtil PocoFoundation PocoJSON PocoRedis s2 h3 pthread)
 
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set (CMAKE_CXX_FLAGS_DEBUG "-DDEBUG")
+set (CMAKE_CXX_FLAGS_DEBUG "-DDEBUG -g2 -ggdb")
 
   message("OPENMP FOUND")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")

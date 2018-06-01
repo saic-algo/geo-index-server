@@ -139,7 +139,7 @@ function performanceTests({ center, scales, totalCounts, queryCounts, queryCount
 performanceTests({
   center: LOCATION_SHANGHAI,
   scales: [5000],
-  totalCounts: [100000],
+  totalCounts: [10000],
   queryCounts: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
   queryCount: 10000,
   types: ['s2'],
