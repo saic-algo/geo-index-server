@@ -9,7 +9,9 @@ class S2GeoIndex : public GeoIndex {
   public:
     virtual void AddPoint(const GeoPoint &point);
     virtual VGeoPointPtr QueryClosestPoints(const GeoPoint &target, int maxCount, double maxRadius) const;
-
+    S2GeoIndex(const S2GeoIndex& index);
+    S2GeoIndex(){};
+    
   private:
     S2PointIndex<std::string> m_pointIndex;
 };

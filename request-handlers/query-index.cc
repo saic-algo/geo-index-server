@@ -6,6 +6,7 @@
 #include <regex>
 #include <thread>
 #include <mutex>
+#include "../s2-geo-index.h"
 #include "omp.h"
 
 #include <Poco/JSON/Parser.h>
@@ -23,7 +24,7 @@ using Poco::JSON::Array;
 
 std::mutex mtx;   // mutex for critical section
 
-const GeoIndex *pIndex;
+const S2GeoIndex *Indicies[64];
 std::vector<Object::Ptr> tempResults;
 Array::Ptr targets;
 Array::Ptr results;
@@ -42,7 +43,7 @@ void batchProcessQuery(int id, int start, int end)
     Object::Ptr result(new Object);
     Array::Ptr points(new Array);
     
-    auto pPoints = pIndex->QueryClosestPoints(GeoPoint(pids[i], lats[i], lngs[i]), count, radius);
+    auto pPoints = Indicies[id]->QueryClosestPoints(GeoPoint(pids[i], lats[i], lngs[i]), count, radius);
 
     for (auto &point: *pPoints) {
       points->add((const Array::Ptr)point);
@@ -64,7 +65,12 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   // Find the index
   Log("URI", request.getURI());
 
-  pIndex = m_registry.GetGeoIndex(m_uuid);
+  GeoIndex *pIndex = const_cast<GeoIndex*>(m_registry.GetGeoIndex(m_uuid));
+  S2GeoIndex *pS2Index = dynamic_cast<S2GeoIndex*>(pIndex);
+
+  for(int i=0; i<64; ++i){
+  	Indicies[i] = new S2GeoIndex(*pS2Index);
+  }
 
   if (!pIndex) {
     BadRequest(response);
@@ -85,7 +91,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   m_performanceLogger.start("make-query");
 
   int num_query = targets->size();
-  int num_threads = 16;
+  int num_threads = 4;
   num_threads = num_query > num_threads ? num_threads : num_query;
   threadLogs.clear();
   threadLogs.resize(num_threads);
@@ -146,6 +152,11 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
     std::cout << ostr.str() << "\n";
   }
   std::cout << "===================================== Finish of  KNN-" << count << "=====================================\n\n";
+
+  for(int i=0; i<64; ++i){
+  	delete Indicies[i];
+  	Indicies[i] = nullptr;
+  }
 
   SendResponse(response, objRes);
 }

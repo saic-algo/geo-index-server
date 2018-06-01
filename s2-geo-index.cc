@@ -1,6 +1,7 @@
 #include <s2/s2latlng.h>
 #include <s2/s2closest_point_query.h>
 #include <s2/s2earth.h>
+#include <s2/s2point_index.h>
 
 #include "s2-geo-index.h"
 
@@ -36,3 +37,12 @@ VGeoPointPtr S2GeoIndex::QueryClosestPoints(const GeoPoint &target, int maxCount
   return points;
 }
 
+S2GeoIndex::S2GeoIndex(const S2GeoIndex& index)
+{
+
+  S2PointIndex<std::string>::Iterator iter;
+  iter.Init(&(index.m_pointIndex));
+  for(; !iter.done(); iter.Next()){
+    m_pointIndex.Add(iter.point_data());
+  }
+}
