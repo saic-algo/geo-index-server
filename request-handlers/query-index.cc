@@ -25,7 +25,7 @@ using Poco::JSON::Array;
 
 std::mutex mtx;   // mutex for critical section
 
-const S2GeoIndex *Indicies[64];
+const GeoIndex *pIndex;
 std::vector<Object::Ptr> tempResults;
 std::vector<int> queryCounter;
 Array::Ptr targets;
@@ -36,6 +36,7 @@ std::vector<std::string> pids;
 std::vector<double> lats;
 std::vector<double> lngs;
 std::vector<std::ostringstream> threadLogs;
+std::vector<std::pair<float, float>> queryTimer;
 
 void batchProcessQuery(int id, int start, int end)
 {
@@ -45,7 +46,9 @@ void batchProcessQuery(int id, int start, int end)
     Object::Ptr result(new Object);
     Array::Ptr points(new Array);
     
-    auto pPoints = Indicies[id]->QueryClosestPoints(GeoPoint(pids[i], lats[i], lngs[i]), count, radius);
+    queryTimer[i].first = (float)clock()/CLOCKS_PER_SEC;
+    auto pPoints = pIndex->QueryClosestPoints(GeoPoint(pids[i], lats[i], lngs[i]), count, radius);
+    queryTimer[i].second = (float)clock()/CLOCKS_PER_SEC;
 
     for (auto &point: *pPoints) {
       points->add((const Array::Ptr)point);
@@ -68,12 +71,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   // Find the index
   Log("URI", request.getURI());
 
-  GeoIndex *pIndex = const_cast<GeoIndex*>(m_registry.GetGeoIndex(m_uuid));
-  S2GeoIndex *pS2Index = dynamic_cast<S2GeoIndex*>(pIndex);
-
-  for(int i=0; i<4; ++i){
-  	Indicies[i] = new S2GeoIndex(*pS2Index);
-  }
+  pIndex = m_registry.GetGeoIndex(m_uuid);
 
   if (!pIndex) {
     BadRequest(response);
@@ -94,7 +92,7 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   m_performanceLogger.start("make-query");
 
   int num_query = targets->size();
-  int num_threads = 4;
+  int num_threads = 1;
   num_threads = num_query > num_threads ? num_threads : num_query;
   threadLogs.clear();
   threadLogs.resize(num_threads);
@@ -155,6 +153,10 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
   for(auto &ostr : threadLogs){
     std::cout << ostr.str() << "\n";
+  }
+
+  for(int i=0; i<num_query; ++i){
+    std::cout << "Query" << i << "\t" << queryTimer[i].first << "\t" << queryTimer[i].second << "\n";
   }
   std::cout << "===================================== Finish of  KNN-" << count << "=====================================\n\n";
 
