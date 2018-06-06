@@ -19,3 +19,4 @@ target_link_libraries(test-server PocoNet PocoUtil PocoFoundation PocoJSON PocoR
 
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (CMAKE_CXX_FLAGS_DEBUG "-DDEBUG")
+set (CMAKE_CXX_FLAGS "-std=c++14")
