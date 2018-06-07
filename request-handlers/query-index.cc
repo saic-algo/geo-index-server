@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <regex>
+#include "omp.h"
 
 #include <Poco/JSON/Parser.h>
 #include <Poco/URI.h>
@@ -38,12 +39,19 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   Array::Ptr results(new Array);
 
   m_performanceLogger.start("make-query");
-  for (auto &i: *targets) {
+
+  int num_threads = 16;
+  omp_set_num_threads(num_threads);
+  std::cout << "Max num threads: " << omp_get_max_threads() << ", Num threads: " << omp_get_num_threads() << ", thread id " << omp_get_thread_num() << std::endl;
+
+#pragma omp parallel for num_threads(num_threads)
+  for(int i=0; i<(int)targets->size(); ++i)
+  {
+    // std::cout << "Max num threads: " << omp_get_max_threads() << ", Num threads: " << omp_get_num_threads() << ", thread id " << omp_get_thread_num() << std::endl;
     Object::Ptr result(new Object);
     Array::Ptr points(new Array);
 
-    Array::Ptr targetPoint = i.extract<Array::Ptr>();
-    result->set("target", targetPoint);
+    Array::Ptr targetPoint = targets->get(i).extract<Array::Ptr>();
 
     const string &id = targetPoint->get(0).toString();
     const double lat = (double)targetPoint->get(1);
@@ -57,8 +65,13 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
     result->set("points", points);
 
-    results->add(result);
+#pragma omp critical
+    {
+      results->add(result);
+    }
+
   }
+
   m_performanceLogger.finish("make-query");
 
   objRes->set("id", m_uuid);

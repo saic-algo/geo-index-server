@@ -138,11 +138,11 @@ function performanceTests({ center, scales, totalCounts, queryCounts, queryCount
 
 performanceTests({
   center: LOCATION_SHANGHAI,
-  scales: [2000, 10000, 50000],
-  totalCounts: [10000, 100000, 1000000],
+  scales: [5000],
+  totalCounts: [100000],
   queryCounts: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
   queryCount: 1000,
-  types: ['s2', 'redis'],
+  types: ['s2'],
 }).then(JSON.stringify).then(console.log);
 
 /*

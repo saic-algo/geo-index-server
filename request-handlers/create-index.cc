@@ -4,6 +4,7 @@
 #include "../s2-geo-index.h"
 #include "../redis-geo-index.h"
 #include "../h3-geo-index.h"
+#include "omp.h"
 
 using std::string;
 using std::unique_ptr;
@@ -41,14 +42,16 @@ void CreateIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSe
     index = make_unique<S2GeoIndex>();
   }
 
-  for (auto &i: *points) {
-    Array::Ptr point = i.extract<Array::Ptr>();
+  for (int i=0; i<(int)points->size(); ++i){
+    Array::Ptr point = points->get(i).extract<Array::Ptr>();
     const string &id = point->get(0).toString();
     const double lat = (double)point->get(1);
     const double lng = (double)point->get(2);
 
+
     index->AddPoint(GeoPoint(id, lat, lng));
   }
+
   m_performanceLogger.finish("build-index");
 
   Object::Ptr result(new Object);

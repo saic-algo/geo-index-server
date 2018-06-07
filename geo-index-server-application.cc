@@ -4,6 +4,7 @@
 #include <Poco/Net/ServerSocket.h>
 #include <Poco/Net/HTTPServer.h>
 #include <Poco/Net/HTTPServerParams.h>
+#include "omp.h"
 
 #include "geo-index-server-application.h"
 #include "geo-index-request-handler-factory.h"
