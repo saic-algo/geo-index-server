@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <regex>
+#include "omp.h"
 
 #include <Poco/JSON/Parser.h>
 #include <Poco/URI.h>
@@ -14,6 +15,8 @@ using std::vector;
 
 using Poco::JSON::Object;
 using Poco::JSON::Array;
+
+const int num_threads = 8;
 
 void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) {
   // Find the index
@@ -38,12 +41,15 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
   Array::Ptr results(new Array);
 
   m_performanceLogger.start("make-query");
-  for (auto &i: *targets) {
+  std::vector<Object::Ptr> tempResults(targets->size());
+
+#pragma omp parallel for num_threads(num_threads)
+  for(int i=0; i<(int)targets->size(); ++i)
+  {
     Object::Ptr result(new Object);
     Array::Ptr points(new Array);
 
-    Array::Ptr targetPoint = i.extract<Array::Ptr>();
-    result->set("target", targetPoint);
+    Array::Ptr targetPoint = targets->get(i).extract<Array::Ptr>();
 
     const string &id = targetPoint->get(0).toString();
     const double lat = (double)targetPoint->get(1);
@@ -57,8 +63,13 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
     result->set("points", points);
 
+    tempResults[i] = result;
+  }
+
+  for(auto &result : tempResults){
     results->add(result);
   }
+
   m_performanceLogger.finish("make-query");
 
   objRes->set("id", m_uuid);
@@ -66,4 +77,3 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
   SendResponse(response, objRes);
 }
-
