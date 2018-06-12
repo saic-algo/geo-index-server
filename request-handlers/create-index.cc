@@ -57,4 +57,3 @@ void CreateIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSe
   m_registry.AddGeoIndex(move(index));
   SendResponse(response, result);
 }
-
