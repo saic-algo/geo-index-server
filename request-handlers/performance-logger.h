@@ -18,7 +18,7 @@ class PerformanceLogger {
     DurationMap::const_iterator cbegin() { return m_durations.cbegin(); }
     DurationMap::const_iterator cend() { return m_durations.cend(); }
   private:
-    TimestampMap m_startTimes;
+    DurationMap m_startTimes;
     DurationMap m_durations;
 };
 
