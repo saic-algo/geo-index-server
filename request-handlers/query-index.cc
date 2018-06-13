@@ -19,7 +19,7 @@ using Poco::JSON::Array;
 void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) {
   // Find the index
   Log("URI", request.getURI());
-
+  std::cout<<request.getURI()<<std::endl;
   const GeoIndex *pIndex = m_registry.GetGeoIndex(m_uuid);
 
   if (!pIndex) {
@@ -37,12 +37,14 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
 
   Object::Ptr objRes(new Object);
   Array::Ptr results(new Array);
+  std::vector<Object> ret(targets->size());
 
   m_performanceLogger.start("make-query");
 
   int num_threads = 16;
   omp_set_num_threads(num_threads);
   std::cout << "Max num threads: " << omp_get_max_threads() << ", Num threads: " << omp_get_num_threads() << ", thread id " << omp_get_thread_num() << std::endl;
+  double starttime=omp_get_wtime();
 
 #pragma omp parallel for num_threads(num_threads)
   for(int i=0; i<(int)targets->size(); ++i)
@@ -63,14 +65,18 @@ void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPSer
       points->add((const Array::Ptr)point);
     }
 
-    result->set("points", points);
-
+    //result->set("points", points);
+    ret[i].set("points",points);
+/*
 #pragma omp critical
     {
       results->add(result);
     }
-
+*/
   }
+  for(int i=0;i<(int)targets->size();++i) results->add(ret[i]);
+  double endtime=omp_get_wtime();
+  std::cout << "Using " << num_threads << " threads. Query starts at " << starttime << ", finishes at " << endtime << ", duration " << endtime - starttime << " seconds."<<std::endl;
 
   m_performanceLogger.finish("make-query");
 
