@@ -13,6 +13,9 @@ add_executable(
   request-handlers/create-index.cc
   request-handlers/delete-index.cc
   request-handlers/query-index.cc
+  active-create-index.cpp
+  request-handlers/delete-latest-index.cpp
+  request-handlers/query-latest-index.cpp
 )
 
 target_link_libraries(test-server PocoNet PocoUtil PocoFoundation PocoJSON PocoRedis s2 h3)

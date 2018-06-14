@@ -19,7 +19,7 @@ using Poco::JSON::Array;
 void QueryIndexRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response) {
   // Find the index
   Log("URI", request.getURI());
-  std::cout<<request.getURI()<<std::endl;
+  //std::cout<<request.getURI()<<std::endl;
   const GeoIndex *pIndex = m_registry.GetGeoIndex(m_uuid);
 
   if (!pIndex) {

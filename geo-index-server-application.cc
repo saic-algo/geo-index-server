@@ -5,9 +5,11 @@
 #include <Poco/Net/HTTPServer.h>
 #include <Poco/Net/HTTPServerParams.h>
 #include "omp.h"
+#include<thread>
 
 #include "geo-index-server-application.h"
 #include "geo-index-request-handler-factory.h"
+#include"active-create-index.h"
 
 using Poco::Util::Application;
 using Poco::Util::Option;
@@ -68,6 +70,8 @@ int GeoIndexServerApplication::main(const std::vector<std::string>& args)
     ServerSocket socket(port);
     HTTPServer server(new GeoIndexRequestHandlerFactory(m_registry), socket, new HTTPServerParams);
     server.start();
+		std::cout<<"Create thread to pull cars"<<std::endl;
+		std::thread m_thread(active_create_index,&m_registry);
     waitForTerminationRequest();
     server.stop();
   }
